@@ -522,7 +522,7 @@ ${context}
   });
 
   app.post("/api/chat", async (req, res) => {
-    const { message, history, images } = req.body;
+    const { message, history, images, studentName, studentClass } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -531,6 +531,13 @@ ${context}
 
     try {
       const ragContext = await getRelevantKnowledge(message);
+
+      // Cá nhân hóa (không bắt buộc): nếu sinh viên vào từ link Sổ tay điểm danh kèm tên/lớp,
+      // chèn 1 dòng ngắn để Thầy/Cô AI biết đang nói chuyện với ai. Không có thì bỏ qua, hành vi giữ nguyên.
+      let personalization = "";
+      if (studentName || studentClass) {
+        personalization = `\n\nTHÔNG TIN SINH VIÊN ĐANG TRÒ CHUYỆN: ${studentName ? `Tên: ${studentName}. ` : ""}${studentClass ? `Lớp: ${studentClass}.` : ""}\nHãy gọi đúng tên Em (nếu có) một cách tự nhiên, không cần lặp lại ở mọi câu trả lời.`;
+      }
 
       const stream = await withRetry(() => getGeminiClient().models.generateContentStream({
         model: "gemini-3.5-flash", 
@@ -555,7 +562,7 @@ ${context}
             }
         ],
         config: {
-            systemInstruction: SYSTEM_INSTRUCTION + ragContext,
+            systemInstruction: SYSTEM_INSTRUCTION + personalization + ragContext,
         }
       }));
       

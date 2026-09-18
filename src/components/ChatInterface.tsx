@@ -3,7 +3,7 @@ import { Ruler, PencilRuler, Zap, ShieldAlert, Layers, ChevronRight, MessageSqua
 import { AnimatePresence } from 'motion/react';
 import { sendMessageStream } from '../services/gemini';
 import { ThemeBackground } from './ThemeBackground';
-import { Message, Subject } from '../types';
+import { Message, Subject, StudentInfo } from '../types';
 
 // Sub-components
 import { ChatHeader } from './chat/ChatHeader';
@@ -34,7 +34,8 @@ const STORAGE_KEYS = {
   MESSAGES: 'chat_messages',
   THEME: 'chat_theme',
   AUTO_SPEAK: 'chat_autoSpeak',
-  STATS: 'ai_study_user_stats'
+  STATS: 'ai_study_user_stats',
+  STUDENT_INFO: 'chat_student_info'
 };
 
 export default function ChatInterface() {
@@ -47,6 +48,11 @@ export default function ChatInterface() {
 
   const [stats, setStats] = useState<any>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.STATS);
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [studentInfo, setStudentInfo] = useState<StudentInfo>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.STUDENT_INFO);
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -292,7 +298,7 @@ export default function ChatInterface() {
         parts: [{ text: m.content }]
       }));
 
-      const stream = sendMessageStream(messageText, history, messageImages);
+      const stream = sendMessageStream(messageText, history, messageImages, studentInfo);
       let fullText = '';
       for await (const chunk of stream) {
         fullText += chunk;
@@ -348,6 +354,33 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
     localStorage.removeItem(STORAGE_KEYS.MESSAGES);
     stopSpeaking();
   };
+
+  // Nhận thông tin sinh viên từ link Sổ tay điểm danh (?name=...&lop=...&mon=...).
+  // Không có param nào thì dùng lại thông tin đã lưu từ lần trước (nếu có); không có gì cả thì bỏ qua, hành vi như cũ.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
+    const className = params.get('lop');
+    const mon = params.get('mon');
+
+    if (name || className) {
+      const merged: StudentInfo = {
+        name: name || studentInfo.name,
+        className: className || studentInfo.className
+      };
+      setStudentInfo(merged);
+      localStorage.setItem(STORAGE_KEYS.STUDENT_INFO, JSON.stringify(merged));
+    }
+
+    if (mon && messages.length === 0 && appMode === 'select-mode') {
+      const subject = SUBJECTS.find(s => s.id === mon);
+      if (subject) {
+        setAppMode('chat');
+        handleSend(`Thầy/Cô ơi, em muốn hỏi về môn ${subject.name}`);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col h-screen relative overflow-hidden transition-colors duration-1000">

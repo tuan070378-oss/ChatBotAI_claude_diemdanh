@@ -1,15 +1,23 @@
+import { StudentInfo } from '../types';
 
 export async function* sendMessageStream(
   message: string, 
   history: { role: 'user' | 'model', parts: { text: string }[] }[] = [],
-  images?: string[]
+  images?: string[],
+  studentInfo?: StudentInfo
 ) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ message, history, images }),
+    body: JSON.stringify({
+      message,
+      history,
+      images,
+      studentName: studentInfo?.name || undefined,
+      studentClass: studentInfo?.className || undefined,
+    }),
   });
 
   if (!response.ok) {
