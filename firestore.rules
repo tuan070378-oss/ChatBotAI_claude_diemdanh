@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // KnowledgeItem Validation
+    function isValidKnowledgeItem(data) {
+      return data.keys().hasAll(['subjectId', 'content', 'createdAt']) &&
+             data.keys().size() <= 6 &&
+             data.subjectId is string && data.subjectId.size() <= 50 &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.createdAt is timestamp;
+    }
+
+    match /knowledge/{itemId} {
+      allow read: if true; // Publicly readable for all students to use in RAG
+      
+      // Since the app uses a custom page-level password check (Tuan1978) rather than Firebase Auth,
+      // we permit unauthenticated read, create, update, and delete, while maintaining structural schema checks.
+      allow create: if isValidKnowledgeItem(incoming());
+      allow update: if isValidKnowledgeItem(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['content', 'subjectId', 'chapter', 'embedding'])
+      );
+      allow delete: if true;
+    }
+  }
+}

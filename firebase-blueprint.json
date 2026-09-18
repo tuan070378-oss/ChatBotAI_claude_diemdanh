@@ -1,0 +1,23 @@
+{
+  "entities": {
+    "KnowledgeItem": {
+      "title": "Knowledge Item",
+      "description": "A snippet of technical knowledge for RAG",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string" },
+        "chapter": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "authorId": { "type": "string" }
+      },
+      "required": ["subjectId", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/knowledge": {
+      "schema": "KnowledgeItem",
+      "description": "Collection of knowledge snippets for all subjects"
+    }
+  }
+}

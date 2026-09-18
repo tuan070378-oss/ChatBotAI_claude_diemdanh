@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remix AI - Trợ lý Học tập Cơ khí Chuyên sâu - Aurora Cosmic UI</title>
+    <!-- Paired Typography & Icon Sets -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              heading: ['Outfit', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              cosmic: {
+                950: '#030712',
+                cyan: '#06B6D4',
+                indigo: '#6366F1',
+                violet: '#8B5CF6',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Moving Aurora Cosmic Blobs with blur filters */
+      .aurora-container {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-color: #030712;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      
+      .aurora-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        mix-blend-mode: screen;
+        opacity: 0.35;
+      }
+
+      .blob-purple {
+        top: -10%;
+        left: 15%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, #6366F1 0%, rgba(99,102,241,0) 70%);
+        animation: rotateAurora 18s ease-in-out infinite alternate;
+      }
+
+      .blob-cyan {
+        bottom: -15%;
+        right: 10%;
+        width: 650px;
+        height: 650px;
+        background: radial-gradient(circle, #06B6D4 0%, rgba(6,182,212,0) 70%);
+        animation: rotateAurora 24s ease-in-out infinite alternate-reverse;
+      }
+
+      .blob-violet {
+        top: 35%;
+        left: 40%;
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, #8B5CF6 0%, rgba(139,92,246,0) 70%);
+        animation: floatAurora 15s ease-in-out infinite;
+      }
+
+      @keyframes rotateAurora {
+        0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+        50% { transform: translate(80px, -60px) rotate(180deg) scale(1.15); }
+        100% { transform: translate(-40px, 40px) rotate(360deg) scale(0.95); }
+      }
+
+      @keyframes floatAurora {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-50px, 60px) scale(1.1); }
+      }
+
+      /* Glowing Gradient Animations for Text */
+      .animate-text-gradient {
+        background-size: 200% auto;
+        animation: shineText 5s linear infinite;
+      }
+
+      @keyframes shineText {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      /* Custom Cursor elements matching Behance trends */
+      .cosmic-cursor {
+        width: 8px;
+        height: 8px;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        position: fixed;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+        transition: width 0.2s, height 0.2s, background-color 0.2s;
+        mix-blend-mode: difference;
+      }
+
+      .cosmic-cursor-hover {
+        width: 38px;
+        height: 38px;
+        background-color: rgba(6, 182, 212, 0.35);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+      }
+
+      /* Glassmorphism utility states */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .glass-card:hover {
+        border-color: rgba(6, 182, 212, 0.4);
+        box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+    </style>
+  </head>
+  <body class="bg-cosmic-950 text-gray-300 font-sans min-h-screen antialiased overflow-x-hidden selection:bg-cosmic-cyan/30 selection:text-white">
+    
+    <!-- Custom Tracking Circle on Desktop cursor -->
+    <div id="cursor" class="cosmic-cursor hidden md:block"></div>
+
+    <!-- Live Aurora Animations container -->
+    <div class="aurora-container">
+      <div class="aurora-blob blob-purple"></div>
+      <div class="aurora-blob blob-cyan"></div>
+      <div class="aurora-blob blob-violet"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="relative z-10 max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cosmic-indigo to-cosmic-cyan p-0.5 shadow-lg shadow-cosmic-indigo/20 flex items-center justify-center overflow-hidden">
+          <img 
+            src="/logo.webp" 
+            alt="Remix AI Logo"
+            class="w-full h-full object-cover"
+            loading="eager"
+            onerror="this.src='/logo.png'"
+          />
+        </div>
+        <div>
+          <span class="font-heading font-black text-white text-lg tracking-tight">Remix AI</span>
+          <p class="text-[9px] text-cosmic-cyan font-bold uppercase tracking-widest leading-none">Trợ lý Kỹ thuật Quốc gia</p>
+        </div>
+      </div>
+      
+      <div class="hidden sm:flex items-center gap-8 text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <a href="#features" class="hover:text-white transition-colors cursor-pointer">Tính năng</a>
+        <a href="#subjects" class="hover:text-white transition-colors cursor-pointer">Hệ chuyên ngành</a>
+        <a href="#mockup" class="hover:text-white transition-colors cursor-pointer">Giao diện</a>
+        <a href="#faq" class="hover:text-white transition-colors cursor-pointer font-bold text-cosmic-cyan">Học tập RAG</a>
+      </div>
+
+      <div>
+        <a 
+          href="/" 
+          class="relative group overflow-hidden px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 dark:border-white/5 text-xs font-bold uppercase tracking-wider backdrop-blur-md cursor-pointer transition-all flex items-center gap-2"
+        >
+          <span>Vào Phòng Học</span>
+          <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Hero Showcase Section -->
+    <header class="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-20 text-center space-y-8">
+      
+      <!-- Premium Tag badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cosmic-cyan/10 border border-cosmic-cyan/20 text-cosmic-cyan text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+        <span>⚡ TRÍ TUỆ NHÂN TẠO CÔNG NGHỆ CAO</span>
+      </div>
+
+      <!-- Main Glowing H1 Header inside Outfit display typography -->
+      <h1 class="font-heading font-extrabold text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-white via-cosmic-cyan to-cosmic-indigo animate-text-gradient tracking-tight leading-[1.1] max-w-4xl mx-auto">
+        Chinh phục Cơ khí Mỹ thuật & Công nghệ Kỹ thuật
+      </h1>
+
+      <p class="text-gray-400 text-sm md:text-lg max-w-2xl mx-auto leading-relaxed">
+        Trợ lý AI chuyên sâu hỗ trợ học viên vận hành xưởng máy tiện, máy phay, hàn kết cấu, sửa chữa ô tô và thiết kế điện công nghiệp. Hỏi đáp trực quan qua hình ảnh bản vẽ kỹ thuật.
+      </p>
+
+      <!-- CTA Action Button Controls -->
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a 
+          href="/" 
+          class="px-8 py-4 bg-gradient-to-r from-cosmic-indigo to-cosmic-cyan text-white rounded-2xl font-bold tracking-wide shadow-2xl hover:shadow-cosmic-cyan/30 hover:scale-103 transition-all duration-300 w-full sm:w-auto text-center cursor-pointer"
+        >
+          Đặt Câu Hỏi Miễn Phí
+        </a>
+        <a 
+          href="#subjects" 
+          class="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 dark:border-white/5 rounded-2xl text-white font-bold tracking-wide transition-all backdrop-blur-md w-full sm:w-auto text-center cursor-pointer"
+        >
+          Xem Thử 5 Chuyên Ngành
+        </a>
+      </div>
+
+      <!-- Live metrics counters -->
+      <div class="pt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto text-left">
+        <div class="glass-card p-5 rounded-2xl">
+          <span class="block text-2xl font-black font-heading text-white">99.8%</span>
+          <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Độ chính xác kỹ thuật</span>
+        </div>
+        <div class="glass-card p-5 rounded-2xl">
+          <span class="block text-2xl font-black font-heading text-white">5 Ngành</span>
+          <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Môn học cốt lõi</span>
+        </div>
+        <div class="glass-card p-5 rounded-2xl">
+          <span class="block text-2xl font-black font-heading text-white">&lt; 1 Giây</span>
+          <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Thời gian phản hồi</span>
+        </div>
+        <div class="glass-card p-5 rounded-2xl">
+          <span class="block text-2xl font-black font-heading text-white">24/7</span>
+          <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Học tập linh hoạt</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SaaS Showcase Mockup Frame with Neon borders and Exquisite contrast -->
+    <section id="mockup" class="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <div class="relative rounded-3xl p-1 bg-gradient-to-tr from-cosmic-indigo/40 via-transparent to-cosmic-cyan/40 shadow-2xl">
+        <div class="bg-[#030712]/90 backdrop-blur-2xl rounded-[1.65rem] border border-white/10 overflow-hidden">
+          
+          <!-- Mockup top utility bar -->
+          <div class="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-red-500/80"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-green-500/80"></span>
+            </div>
+            <div class="px-8 py-1.5 rounded-full bg-black/60 border border-white/5 text-[10px] font-mono text-gray-550 select-all tracking-wider text-center w-64">
+              remix-ai-study.io/console
+            </div>
+            <div class="w-12 h-4"></div>
+          </div>
+
+          <!-- Application Dashboard Showcase -->
+          <div class="grid grid-cols-1 md:grid-cols-3 min-h-[420px]">
+            
+            <!-- Side index outline -->
+            <div class="p-6 border-r border-white/10 bg-white/[0.01]/60 flex flex-col gap-6 justify-between">
+              <div class="space-y-4">
+                <span class="block text-[9px] font-black text-cosmic-cyan uppercase tracking-wider">Danh mục chuyên môn</span>
+                <ul class="space-y-2 text-xs font-semibold text-gray-400">
+                  <li class="flex items-center gap-2.5 p-2 bg-white/5 border border-white/10 text-white rounded-xl"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-cyan"></span> 📏 Dung sai lắp ghép</li>
+                  <li class="flex items-center gap-2.5 p-2"><span class="w-1.5 h-1.5 rounded-full bg-transparent"></span> ⚡ Cơ kỹ thuật ứng dụng</li>
+                  <li class="flex items-center gap-2.5 p-2"><span class="w-1.5 h-1.5 rounded-full bg-transparent"></span> ✏️ Bản vẽ kỹ thuật CAD</li>
+                  <li class="flex items-center gap-2.5 p-2"><span class="w-1.5 h-1.5 rounded-full bg-transparent"></span> ⚙️ Vật liệu & Công cụ</li>
+                </ul>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-[10px] text-gray-500 space-y-2 leading-relaxed font-semibold">
+                <span class="text-white block font-bold text-xs">🎓 Lê Tuấn - Minh Vân</span>
+                Giảng viên cơ khí chuyên nghiệp nhiều năm kinh nghiệm đồng sáng lập và định hướng thuật toán học tập.
+              </div>
+            </div>
+
+            <!-- Central Live Preview simulator -->
+            <div class="md:col-span-2 p-8 flex flex-col justify-between space-y-6">
+              <div class="space-y-4">
+                <div class="flex gap-3 justify-end">
+                  <div class="p-3 bg-cosmic-indigo/20 border border-cosmic-indigo/40 rounded-2xl rounded-tr-none text-xs text-white max-w-sm">
+                    Giải thích ký hiệu của mác thép: <b>GC35-10</b> nghĩa là gì?
+                  </div>
+                </div>
+
+                <div class="flex gap-3 justify-start">
+                  <div class="p-4 bg-white/5 border border-white/10 rounded-2xl rounded-tl-none text-xs text-gray-300 max-w-lg space-y-2 leading-relaxed font-medium">
+                    <p><b>GC35-10</b> là ký hiệu vật liệu của <b>Gang cầu</b> theo tiêu chuẩn Việt Nam:</p>
+                    <ul class="list-disc list-inside space-y-1 pl-1">
+                      <li><b>GC:</b> Viết tắt của Gang Cầu.</li>
+                      <li><b>35:</b> Chỉ giới hạn bền kéo cực hạn tối thiểu là <code class="bg-white/10 px-1 rounded text-cyan-400">35 kG/mm²</code> (Tương đương 350 MPa).</li>
+                      <li><b>10:</b> Chỉ độ dãn dài tương đối tối thiểu là <code class="bg-white/10 px-1 rounded text-cyan-400">10%</code>.</li>
+                    </ul>
+                    <p class="text-[10px] text-cosmic-cyan font-bold italic">💡 Thường dùng làm chi tiết xi lanh động cơ, bọc máy chịu kéo và va đập lớn.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Simulator input area -->
+              <div class="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10">
+                <span class="pl-3 text-xs text-gray-500">Đặt câu hỏi: "Momen ngẫu lực..."</span>
+                <span class="ml-auto px-4 py-2 bg-gradient-to-r from-cosmic-indigo to-cosmic-cyan text-white text-xs font-bold rounded-xl shadow">Gửi</span>
+              </div>
+            </div>
+            
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Professional Features Segment -->
+    <section id="features" class="relative z-10 max-w-6xl mx-auto px-6 py-24 space-y-16">
+      <div class="text-center space-y-4">
+        <span class="text-[10px] pr-1.5 text-cosmic-cyan font-black uppercase tracking-[0.25em]">⚙️ ĐƯỢC THIẾT KẾ CHO LỚP HỌC VÀ NHÀ XƯỞNG</span>
+        <h2 class="font-heading font-extrabold text-3xl md:text-5xl text-white tracking-tight">Hệ Thống Tiện Ích Hiện Đại</h2>
+        <p class="text-gray-400 max-w-xl mx-auto text-sm leading-relaxed">
+          Tối ưu hóa khả năng hiểu bài của học viên, giúp tiếp cận lý thuyết trừu tượng một cách đơn giản, trực quan và thực tiễn nhất.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="glass-card p-8 rounded-3xl space-y-4">
+          <div class="w-12 h-12 bg-cosmic-cyan/10 text-cosmic-cyan rounded-2xl flex items-center justify-center font-black">AI</div>
+          <h3 class="font-heading font-bold text-xl text-white">Nhận diện hình ảnh bản vẽ</h3>
+          <p class="text-xs text-gray-400 leading-relaxed font-semibold">
+            Tải ảnh bản vẽ kỹ thuật cơ khí, chi tiết gia công hư hỏng hay thước cặp. AI phân tích và trả lời ngay lập tức về dung sai lắp ghép, góc cắt gọt tối ưu.
+          </p>
+        </div>
+        <div class="glass-card p-8 rounded-3xl space-y-4">
+          <div class="w-12 h-12 bg-cosmic-indigo/10 text-cosmic-violet rounded-2xl flex items-center justify-center font-black">TTS</div>
+          <h3 class="font-heading font-bold text-xl text-white">Chuyển đổi văn bản sang giọng nói</h3>
+          <p class="text-xs text-gray-400 leading-relaxed font-semibold">
+            Được trang bị model phát âm tiếng Việt chuẩn giúp bạn vừa đọc câu trả lời vừa nghe trợ lý giải thích, cực kỳ khích lệ học viên tại môi trường ồn ào của phòng xưởng.
+          </p>
+        </div>
+        <div class="glass-card p-8 rounded-3xl space-y-4">
+          <div class="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center font-black">RAG</div>
+          <h3 class="font-heading font-bold text-xl text-white">Kho RAG tri thức vạn năng</h3>
+          <p class="text-xs text-gray-400 leading-relaxed font-semibold">
+            Giảng viên dễ dàng đồng bộ tài liệu, sách giáo trình chuyên sâu định dạng PDF/DOCX làm cơ sở dữ liệu nền tảng RAG. Trợ lý AI trả lời bám sát 100% nội dung giảng dạy thực tế.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deep-dive Subjects section -->
+    <section id="subjects" class="relative z-10 max-w-6xl mx-auto px-6 py-16 space-y-12">
+      <div class="text-center space-y-4">
+        <span class="text-[10px] text-cosmic-cyan font-black uppercase tracking-[0.25em]">📚 CO SỞ KIẾN THỨC BỒI DƯỠNG</span>
+        <h2 class="font-heading font-extrabold text-3xl text-white tracking-tight">Hỗ Trợ Toàn Diện 5 Bộ Chuyên Ngành</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
+          <div class="text-2xl text-cyan-400">📏</div>
+          <h4 class="font-heading font-bold text-sm text-white">Dung sai & Đo lường</h4>
+          <p class="text-[10px] text-gray-500 leading-normal font-semibold">Tính toán lắp ghép trục và lỗ, dung sai hình dáng tế vi bề mặt.</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
+          <div class="text-2xl text-orange-400">⚡</div>
+          <h4 class="font-heading font-bold text-sm text-white">Cơ kỹ thuật</h4>
+          <p class="text-[10px] text-gray-500 leading-normal font-semibold">Tính dầm bền, kết cấu chịu xiết, ứng năng lực căng và mô-men xoắn.</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
+          <div class="text-2xl text-green-400">✏️</div>
+          <h4 class="font-heading font-bold text-sm text-white">Vẽ kỹ thuật</h4>
+          <p class="text-[10px] text-gray-500 leading-normal font-semibold">Đọc bản vẽ mặt cắt, hình dạng ba chiếu, tiêu chuẩn chữ viết bản vẽ.</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
+          <div class="text-2xl text-purple-400">⚙️</div>
+          <h4 class="font-heading font-bold text-sm text-white">Vật liệu cơ khí</h4>
+          <p class="text-[10px] text-gray-500 leading-normal font-semibold">Tính chất cơ hóa lý của Thép, Gang xám, Đồng thau, Nhôm dẻo.</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
+          <div class="text-2xl text-red-400">🛡️</div>
+          <h4 class="font-heading font-bold text-sm text-white">An toàn lao động</h4>
+          <p class="text-[10px] text-gray-500 leading-normal font-semibold">Quy tắc chống dật điện, bảo vệ mắt hàn, sơ cứu tại xưởng máy cơ khí.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Standing Footer -->
+    <footer class="relative z-10 max-w-7xl mx-auto px-6 py-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-6">
+      <div class="flex items-center gap-2">
+        <span class="font-heading font-black text-white text-sm">Remix AI • 2026</span>
+        <span>|</span>
+        <span>Phát triển nâng cấp bởi Lê Tuấn - Minh Vân</span>
+      </div>
+      <div>
+        <span>@Công nghệ Trí tuệ Giáo dục Quốc gia Việt Nam</span>
+      </div>
+    </footer>
+
+    <!-- Custom Cursor Mouse Tracking Logic -->
+    <script>
+      const cursor = document.getElementById('cursor');
+      if (cursor) {
+        document.addEventListener('mousemove', (e) => {
+          cursor.style.left = e.clientX + 'px';
+          cursor.style.top = e.clientY + 'px';
+        });
+
+        // Add Hover classes to enlarge on links/buttons
+        const hoverables = document.querySelectorAll('a, button, input, select, textarea, [role="button"]');
+        hoverables.forEach(item => {
+          item.addEventListener('mouseenter', () => {
+            cursor.classList.add('cosmic-cursor-hover');
+          });
+          item.addEventListener('mouseleave', () => {
+            cursor.classList.remove('cosmic-cursor-hover');
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

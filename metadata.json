@@ -1,0 +1,11 @@
+{
+  "name": "Remix: Trợ lý Học tập AI_v1.2",
+  "description": "Chatbot AI hỗ trợ học viên các ngành Cắt gọt kim loại, Hàn, Ô tô, Điện công nghiệp nắm vững kiến thức cơ sở.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
