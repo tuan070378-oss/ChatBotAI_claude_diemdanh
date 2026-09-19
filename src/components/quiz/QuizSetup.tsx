@@ -13,6 +13,7 @@ export interface QuizConfig {
   chapter: string;
   difficulty: 'easy' | 'medium' | 'hard';
   count: number;
+  source: 'ai' | 'bank';
 }
 
 const CHAPTERS: Record<string, string[]> = {
@@ -28,6 +29,22 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
   const [chapter, setChapter] = useState(CHAPTERS[subjects[0].id]?.[0] || 'Chương 1');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [count, setCount] = useState(5);
+  const [source, setSource] = useState<'ai' | 'bank'>('ai');
+
+  const handleSourceChange = (newSource: 'ai' | 'bank') => {
+    setSource(newSource);
+    if (newSource === 'bank') {
+      // Mặc định 40 câu khi chuyển sang Kiểm tra nếu chưa chọn 40 hoặc 60
+      if (count !== 40 && count !== 60) {
+        setCount(40);
+      }
+    } else {
+      // Chuyển về Ôn tập AI: đặt lại số lượng câu trong phạm vi 3-15
+      if (count > 15 || count < 3) {
+        setCount(5);
+      }
+    }
+  };
 
   const handleSubjectChange = (id: string) => {
     setSubjectId(id);
@@ -78,6 +95,42 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
         <div className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-xs">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
+              <Layers size={14} /> Nguồn đề
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSourceChange('ai')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer",
+                  source === 'ai'
+                    ? "bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 shadow-xs"
+                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                )}
+              >
+                Ôn tập AI
+              </button>
+              <button
+                onClick={() => handleSourceChange('bank')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer",
+                  source === 'bank'
+                    ? "bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 shadow-xs"
+                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                )}
+              >
+                Kiểm tra
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              {source === 'ai'
+                ? 'AI tự biên soạn câu hỏi mới mỗi lần, để ôn tập tự do.'
+                : 'Đề kiểm tra trắc nghiệm cố định do giáo viên soạn sẵn.'}
+            </p>
+          </div>
+
+          {source === 'ai' && (
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
               <Layers size={14} /> Bước 2: Chương / Chủ đề
             </label>
             <select
@@ -90,7 +143,9 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
               ))}
             </select>
           </div>
+          )}
 
+          {source === 'ai' && (
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
               <BarChart3 size={14} /> Bước 3: Mức độ đề
@@ -112,36 +167,76 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
               ))}
             </div>
           </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center justify-between">
-              <span className="flex items-center gap-2"><Settings size={14} /> Bước 4: Số lượng câu:</span>
+              <span className="flex items-center gap-2">
+                <Settings size={14} /> {source === 'ai' ? 'Bước 4: Số lượng câu:' : 'Bước 2: Số lượng câu hỏi kiểm tra:'}
+              </span>
               <span className="text-cyan-600 dark:text-cyan-400 font-extrabold">{count} câu</span>
             </label>
-            <input
-              type="range"
-              min="3"
-              max="15"
-              step="1"
-              value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
-            />
-            <div className="flex justify-between text-[11px] text-gray-500 px-1 font-mono">
-              <span>3 câu</span>
-              <span>15 câu</span>
-            </div>
+            {source === 'bank' ? (
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setCount(40)}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
+                    count === 40
+                      ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
+                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                  )}
+                >
+                  <span className="text-base sm:text-lg font-extrabold">40 câu</span>
+                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 40 ? "text-cyan-100" : "text-gray-400")}>
+                    Mặc định
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCount(60)}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
+                    count === 60
+                      ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
+                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                  )}
+                >
+                  <span className="text-base sm:text-lg font-extrabold">60 câu</span>
+                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 60 ? "text-cyan-100" : "text-gray-400")}>
+                    Nâng cao
+                  </span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="range"
+                  min="3"
+                  max="15"
+                  step="1"
+                  value={count}
+                  onChange={(e) => setCount(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                />
+                <div className="flex justify-between text-[11px] text-gray-500 px-1 font-mono">
+                  <span>3 câu</span>
+                  <span>15 câu</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       <div className="flex justify-center pt-2">
         <button
-          onClick={() => onStart({ subjectId, chapter, difficulty, count })}
+          onClick={() => onStart({ subjectId, chapter, difficulty, count, source })}
           className="w-full sm:w-auto px-8 sm:px-12 py-3.5 sm:py-4 bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-cyan-600/20 transition-all group cursor-pointer"
         >
           <Play size={18} className="fill-current group-hover:scale-110 transition-transform" />
-          Bắt đầu ôn tập cùng AI
+          {source === 'ai' ? 'Bắt đầu ôn tập cùng AI' : 'Bắt đầu làm kiểm tra'}
         </button>
       </div>
 

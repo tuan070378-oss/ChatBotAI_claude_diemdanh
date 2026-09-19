@@ -24,13 +24,18 @@ service cloud.firestore {
     match /knowledge/{itemId} {
       allow read: if true; // Publicly readable for all students to use in RAG
       
-      // Since the app uses a custom page-level password check (Tuan1978) rather than Firebase Auth,
+      // Since the app uses a custom page-level password check (Tuan1978 / 1210) rather than Firebase Auth,
       // we permit unauthenticated read, create, update, and delete, while maintaining structural schema checks.
       allow create: if isValidKnowledgeItem(incoming());
       allow update: if isValidKnowledgeItem(incoming()) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['content', 'subjectId', 'chapter', 'embedding'])
       );
       allow delete: if true;
+    }
+
+    match /question_bank/{itemId} {
+      allow read: if true; // Publicly readable for students to take official quizzes
+      allow create, update, delete: if true; // Managed by teacher / admin
     }
   }
 }

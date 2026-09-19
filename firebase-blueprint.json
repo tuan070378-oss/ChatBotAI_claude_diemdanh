@@ -12,12 +12,33 @@
         "authorId": { "type": "string" }
       },
       "required": ["subjectId", "content", "createdAt"]
+    },
+    "QuestionBankItem": {
+      "title": "Question Bank Item",
+      "description": "A fixed multiple-choice question authored by a teacher, used for official tests (not AI-generated)",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string" },
+        "chapter": { "type": "string" },
+        "questionId": { "type": "string", "description": "Original human-authored ID from the source spreadsheet, e.g. ATLD_CH01_001" },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "string", "description": "Full text of the correct option, matching one entry in options" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "bloomLevel": { "type": "string", "description": "Original Bloom level from the source: NB (Nhận biết), TH (Thông hiểu), VD (Vận dụng)" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["subjectId", "question", "options", "correctAnswer", "createdAt"]
     }
   },
   "firestore": {
     "/knowledge": {
       "schema": "KnowledgeItem",
       "description": "Collection of knowledge snippets for all subjects"
+    },
+    "/question_bank": {
+      "schema": "QuestionBankItem",
+      "description": "Fixed MCQ question bank per subject, imported from teacher-authored Excel files"
     }
   }
 }

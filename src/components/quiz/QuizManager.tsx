@@ -4,6 +4,7 @@ import { QuizScreen } from './QuizScreen';
 import { ResultDashboard } from './ResultDashboard';
 import { QuizQuestion, QuizResult, Subject } from '../../types';
 import { generateQuiz } from '../../services/gemini';
+import { fetchQuestionBank, shuffleQuestions } from '../../services/questionBank';
 import { Loader2, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -49,11 +50,23 @@ export const QuizManager: React.FC<QuizManagerProps> = ({ subjects, onBackToHome
   const handleStart = async (config: QuizConfig) => {
     setCurrentConfig(config);
     setStep('loading');
-    setLoadingMsg(`AI đang biên soạn đề thi môn ${config.subjectId}...`);
-    
+
     try {
-      const subjectName = subjects.find(s => s.id === config.subjectId)?.name || config.subjectId;
-      const data = await generateQuiz(subjectName, config.chapter, config.difficulty, config.count);
+      let data: QuizQuestion[];
+
+      if (config.source === 'bank') {
+        setLoadingMsg('Đang tải đề kiểm tra từ ngân hàng câu hỏi...');
+        const bank = await fetchQuestionBank(config.subjectId);
+        if (!bank || bank.length === 0) {
+          throw new Error('Môn học này chưa có bộ đề kiểm tra trong ngân hàng. Vui lòng chọn "Ôn tập AI" hoặc liên hệ giáo viên.');
+        }
+        data = shuffleQuestions(bank).slice(0, config.count);
+      } else {
+        setLoadingMsg(`AI đang biên soạn đề thi môn ${config.subjectId}...`);
+        const subjectName = subjects.find(s => s.id === config.subjectId)?.name || config.subjectId;
+        data = await generateQuiz(subjectName, config.chapter, config.difficulty, config.count);
+      }
+
       if (!data || !Array.isArray(data) || data.length === 0) {
         throw new Error("AI bận hoặc phản hồi cấu trúc câu hỏi bị lỗi. Vui lòng bấm tạo lại đề thi lần nữa!");
       }
