@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, getDoc, addDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import multer from 'multer';
 import * as XLSX from 'xlsx';
 // @ts-ignore
@@ -862,6 +862,148 @@ Yêu cầu phản hồi:
     } catch (e: any) {
       console.error("Grading error:", e);
       res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post("/api/submit-official-test", async (req, res) => {
+    try {
+      if (!db) {
+        return res.status(500).json({ error: "Firebase Firestore chưa được kết nối trên máy chủ." });
+      }
+
+      const { testId, mssv, className, subjectId, answers } = req.body;
+
+      if (!testId || !String(testId).trim()) {
+        return res.status(400).json({ error: "Thiếu mã bài kiểm tra (testId)." });
+      }
+      if (!mssv || !String(mssv).trim()) {
+        return res.status(400).json({ error: "Thiếu mã số sinh viên (mssv)." });
+      }
+      if (!className || !String(className).trim()) {
+        return res.status(400).json({ error: "Thiếu thông tin lớp học (className)." });
+      }
+      if (!subjectId || !String(subjectId).trim()) {
+        return res.status(400).json({ error: "Thiếu mã môn học (subjectId)." });
+      }
+      if (!Array.isArray(answers) || answers.length === 0) {
+        return res.status(400).json({ error: "Danh sách câu trả lời không hợp lệ hoặc rỗng." });
+      }
+
+      // Tra cứu và chấm điểm từng câu hỏi trực tiếp từ Firestore question_bank
+      let correctCount = 0;
+      let evaluatedCount = 0;
+
+      // Tra cứu tài liệu câu hỏi theo Document ID (chính là questionId)
+      const lookupPromises = answers.map(async (ans: { questionId: string; selectedAnswer: string }) => {
+        if (!ans || !ans.questionId) return null;
+        try {
+          const qId = String(ans.questionId).trim();
+          const docRef = doc(db, 'question_bank', qId);
+          const docSnap = await getDoc(docRef);
+          if (!docSnap.exists()) {
+            console.warn(`[OfficialTest] Không tìm thấy questionId=${qId} trong question_bank, bỏ qua.`);
+            return null;
+          }
+          const qData = docSnap.data();
+          const expectedAnswer = String(qData.correctAnswer || '').trim();
+          const studentAnswer = String(ans.selectedAnswer || '').trim();
+
+          const isCorrect = studentAnswer !== '' && studentAnswer === expectedAnswer;
+          return { isCorrect, found: true };
+        } catch (err) {
+          console.error(`[OfficialTest] Lỗi khi tra cứu questionId=${ans.questionId}:`, err);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(lookupPromises);
+
+      for (const resItem of results) {
+        if (resItem && resItem.found) {
+          evaluatedCount++;
+          if (resItem.isCorrect) {
+            correctCount++;
+          }
+        }
+      }
+
+      if (evaluatedCount === 0) {
+        return res.status(400).json({ 
+          error: "Không thể xác thực câu hỏi nào trong đề thi với cơ sở dữ liệu. Vui lòng liên hệ giảng viên." 
+        });
+      }
+
+      // Tính điểm thang 10: (số câu đúng / tổng số câu đã trả lời/đánh giá) * 10, làm tròn 1 chữ số thập phân
+      const rawScore = (correctCount / evaluatedCount) * 10;
+      const finalScore = Math.round(rawScore * 10) / 10;
+
+      console.log(`[OfficialTest] MSSV=${mssv}, Lớp=${className}, testId=${testId}: Đúng ${correctCount}/${evaluatedCount} câu -> Điểm: ${finalScore}`);
+
+      // Kiểm tra cấu hình kết nối Điểm danh Auto
+      const webappUrl = process.env.DIEMDANH_WEBAPP_URL;
+      const syncSecret = process.env.DIEMDANH_SYNC_SECRET;
+
+      if (!webappUrl || webappUrl.trim() === '') {
+        return res.status(500).json({ 
+          error: "Máy chủ chưa cấu hình URL Web App Điểm danh Auto (DIEMDANH_WEBAPP_URL)." 
+        });
+      }
+
+      // Gọi sang Apps Script Web App để ghi điểm
+      const targetUrl = webappUrl.includes('?') 
+        ? `${webappUrl}&action=submitAssessment` 
+        : `${webappUrl}?action=submitAssessment`;
+
+      const postBody = new URLSearchParams({
+        secret: syncSecret || '',
+        mssv: String(mssv).trim(),
+        className: String(className).trim(),
+        testId: String(testId).trim(),
+        score: String(finalScore),
+      });
+
+      let appScriptRes: Response;
+      try {
+        appScriptRes = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: postBody,
+        });
+      } catch (networkErr: any) {
+        console.error("[OfficialTest] Không thể kết nối tới Apps Script:", networkErr);
+        return res.status(502).json({ 
+          error: `Không thể kết nối tới hệ thống Điểm danh Auto: ${networkErr.message || 'Lỗi mạng'}. Điểm số chưa được lưu.` 
+        });
+      }
+
+      let scriptData: any = {};
+      try {
+        scriptData = await appScriptRes.json();
+      } catch (jsonErr) {
+        const rawText = await appScriptRes.text().catch(() => '');
+        console.error("[OfficialTest] Phản hồi không phải JSON từ Apps Script:", rawText);
+        return res.status(502).json({ 
+          error: `Hệ thống Điểm danh Auto phản hồi không hợp lệ (${appScriptRes.status}). Điểm chưa được xác nhận vào bảng điểm.` 
+        });
+      }
+
+      if (scriptData.status !== 'success') {
+        console.warn("[OfficialTest] Apps Script từ chối ghi điểm:", scriptData);
+        return res.status(400).json({ 
+          error: scriptData.message || "Ghi điểm vào hệ thống Điểm danh Auto không thành công. Vui lòng báo giảng viên." 
+        });
+      }
+
+      return res.json({
+        success: true,
+        score: finalScore,
+        correctCount,
+        totalQuestions: evaluatedCount,
+        message: scriptData.message || `Đã nộp bài và ghi nhận điểm thành công vào Điểm danh Auto: ${finalScore}/10 điểm!`
+      });
+    } catch (e: any) {
+      console.error("[OfficialTest] Lỗi máy chủ:", e);
+      return res.status(500).json({ error: e.message || "Lỗi xử lý nộp bài kiểm tra chính thức trên máy chủ." });
     }
   });
 

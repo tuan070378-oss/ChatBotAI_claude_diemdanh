@@ -11,6 +11,7 @@ import { ChatInput } from './chat/ChatInput';
 import { MessageItem } from './chat/MessageItem';
 import { SubjectCard } from './chat/SubjectCard';
 import { QuizManager } from './quiz/QuizManager';
+import { OfficialTest } from './quiz/OfficialTest';
 import { AdminPanel } from './admin/AdminPanel';
 import cyberHorseLogo from '../assets/images/cyber_fire_horse.webp';
 
@@ -20,7 +21,15 @@ declare global {
   }
 }
 
-type AppMode = 'chat' | 'quiz' | 'select-mode';
+type AppMode = 'chat' | 'quiz' | 'select-mode' | 'official-test';
+
+interface OfficialTestParams {
+  testId: string;
+  mssv: string;
+  className: string;
+  subjectId: string;
+  studentName?: string;
+}
 
 const SUBJECTS: Subject[] = [
   { id: 'dung-sai', name: 'Dung sai & Đo lường', icon: Ruler, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
@@ -55,6 +64,10 @@ export default function ChatInterface() {
     const saved = localStorage.getItem(STORAGE_KEYS.STUDENT_INFO);
     return saved ? JSON.parse(saved) : {};
   });
+
+  // State in-memory cho luồng Kiểm tra chính thức (không lưu localStorage để tránh làm lại)
+  const [officialTestParams, setOfficialTestParams] = useState<OfficialTestParams | null>(null);
+  const [officialTestError, setOfficialTestError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -356,9 +369,12 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
   };
 
   // Nhận thông tin sinh viên từ link Sổ tay điểm danh (?name=...&lop=...&mon=...).
-  // Không có param nào thì dùng lại thông tin đã lưu từ lần trước (nếu có); không có gì cả thì bỏ qua, hành vi như cũ.
+  // Nếu có ?officialTest=1, chuyển thẳng vào luồng Kiểm tra chính thức với testId và mssv.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const isOfficialTest = params.get('officialTest') === '1' || params.get('officialTest') === 'true';
+    const testId = params.get('testId');
+    const mssv = params.get('mssv');
     const name = params.get('name');
     const className = params.get('lop');
     const mon = params.get('mon');
@@ -370,6 +386,26 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
       };
       setStudentInfo(merged);
       localStorage.setItem(STORAGE_KEYS.STUDENT_INFO, JSON.stringify(merged));
+    }
+
+    // Kiểm tra luồng kiểm tra chính thức
+    if (isOfficialTest) {
+      if (!testId || !testId.trim() || !mssv || !mssv.trim()) {
+        setOfficialTestError('Đường link kiểm tra không hợp lệ: Thiếu mã bài kiểm tra (testId) hoặc mã số sinh viên (mssv). Vui lòng mở lại link từ hệ thống Điểm danh.');
+        setAppMode('official-test');
+        return;
+      }
+
+      setOfficialTestParams({
+        testId: testId.trim(),
+        mssv: mssv.trim(),
+        className: (className || studentInfo.className || 'Chưa rõ lớp').trim(),
+        subjectId: (mon || 'vat-lieu').trim(),
+        studentName: (name || studentInfo.name || '').trim(),
+      });
+      setOfficialTestError(null);
+      setAppMode('official-test');
+      return;
     }
 
     if (mon && messages.length === 0 && appMode === 'select-mode') {
@@ -495,6 +531,36 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
                  )}
              </div>
           </div>
+        ) : appMode === 'official-test' ? (
+          officialTestError ? (
+            <div className="max-w-md mx-auto mt-12 p-6 bg-white dark:bg-gray-900 rounded-3xl border border-red-200 dark:border-red-900/50 shadow-xl text-center space-y-4 animate-in fade-in duration-500">
+              <div className="w-14 h-14 mx-auto bg-red-100 dark:bg-red-950/60 rounded-2xl flex items-center justify-center text-red-600 dark:text-red-400">
+                <ShieldAlert size={28} />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Lỗi truy cập bài kiểm tra chính thức</h3>
+              <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed font-medium">
+                {officialTestError}
+              </p>
+              <button
+                onClick={() => setAppMode('select-mode')}
+                className="px-5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Quay về trang chính
+              </button>
+            </div>
+          ) : officialTestParams ? (
+            <div className="p-4 sm:p-6">
+              <OfficialTest
+                testId={officialTestParams.testId}
+                mssv={officialTestParams.mssv}
+                className={officialTestParams.className}
+                subjectId={officialTestParams.subjectId}
+                studentName={officialTestParams.studentName}
+                subjectName={SUBJECTS.find(s => s.id === officialTestParams.subjectId)?.name}
+                onExit={() => setAppMode('select-mode')}
+              />
+            </div>
+          ) : null
         ) : appMode === 'quiz' ? (
           <QuizManager subjects={SUBJECTS} onBackToHome={() => setAppMode('select-mode')} />
         ) : (
