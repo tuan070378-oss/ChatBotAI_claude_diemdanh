@@ -47,6 +47,28 @@ export const QuizManager: React.FC<QuizManagerProps> = ({ subjects, onBackToHome
     localStorage.setItem('ai_study_user_stats', JSON.stringify(newStats));
   };
 
+  /**
+   * Đảm bảo đủ số câu yêu cầu. Nếu ngân hàng ít hơn `count`, LẶP LẠI câu (đã xáo trộn lại
+   * mỗi vòng) cho tới khi đủ, thay vì âm thầm trả về ít câu hơn. Mỗi câu lặp được gắn `id`
+   * riêng (hậu tố __x1, __x2...) để không trùng key/trạng thái trả lời với câu gốc.
+   */
+  const fillToCount = (bank: QuizQuestion[], count: number): QuizQuestion[] => {
+    if (bank.length === 0) return [];
+    if (bank.length >= count) return shuffleQuestions(bank).slice(0, count);
+
+    const result: QuizQuestion[] = [];
+    let cycle = 0;
+    while (result.length < count) {
+      const batch = shuffleQuestions(bank);
+      for (const q of batch) {
+        if (result.length >= count) break;
+        result.push(cycle === 0 ? q : { ...q, id: `${q.id}__x${cycle}` });
+      }
+      cycle++;
+    }
+    return result;
+  };
+
   const handleStart = async (config: QuizConfig) => {
     setCurrentConfig(config);
     setStep('loading');
@@ -55,12 +77,15 @@ export const QuizManager: React.FC<QuizManagerProps> = ({ subjects, onBackToHome
       let data: QuizQuestion[];
 
       if (config.source === 'bank') {
-        setLoadingMsg('Đang tải đề kiểm tra từ ngân hàng câu hỏi...');
+        setLoadingMsg('Đang tải đề từ ngân hàng câu hỏi...');
         const bank = await fetchQuestionBank(config.subjectId);
         if (!bank || bank.length === 0) {
-          throw new Error('Môn học này chưa có bộ đề kiểm tra trong ngân hàng. Vui lòng chọn "Ôn tập AI" hoặc liên hệ giáo viên.');
+          throw new Error('Môn học này chưa có ngân hàng đề. Vui lòng chọn "Ôn tập AI" hoặc liên hệ giáo viên.');
         }
-        data = shuffleQuestions(bank).slice(0, config.count);
+        if (bank.length < config.count) {
+          alert(`⚠️ Ngân hàng đề môn này hiện chỉ có ${bank.length} câu. Hệ thống sẽ lặp lại câu hỏi cho đủ ${config.count} câu bạn đã chọn.`);
+        }
+        data = fillToCount(bank, config.count);
       } else {
         setLoadingMsg(`AI đang biên soạn đề thi môn ${config.subjectId}...`);
         const subjectName = subjects.find(s => s.id === config.subjectId)?.name || config.subjectId;

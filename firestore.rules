@@ -21,6 +21,15 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    // QuestionBankItem Validation
+    function isValidQuestionBankItem(data) {
+      return data.subjectId is string && data.subjectId.size() > 0
+        && data.question is string && data.question.size() > 0
+        && data.options is list && data.options.size() == 4
+        && data.correctAnswer is string && data.correctAnswer.size() > 0
+        && data.questionId is string;
+    }
+
     match /knowledge/{itemId} {
       allow read: if true; // Publicly readable for all students to use in RAG
       
@@ -33,9 +42,11 @@ service cloud.firestore {
       allow delete: if true;
     }
 
-    match /question_bank/{itemId} {
-      allow read: if true; // Publicly readable for students to take official quizzes
-      allow create, update, delete: if true; // Managed by teacher / admin
+    match /question_bank/{questionId} {
+      allow read: if true;
+      allow create: if isValidQuestionBankItem(incoming());
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

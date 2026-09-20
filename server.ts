@@ -3,8 +3,9 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import multer from 'multer';
+import * as XLSX from 'xlsx';
 // @ts-ignore
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 import mammoth from 'mammoth';
@@ -518,6 +519,175 @@ ${context}
     } catch (e: any) {
       console.error("Upload error:", e);
       res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post("/api/import-question-bank", upload.single("file"), async (req: MulterRequest, res) => {
+    try {
+      if (!db) {
+        return res.status(500).json({ error: "Firebase Firestore chưa được cấu hình trên máy chủ." });
+      }
+
+      const file = req.file;
+      const { subjectId } = req.body;
+
+      if (!file) {
+        return res.status(400).json({ error: "Vui lòng chọn file Excel (.xlsx) để tải lên." });
+      }
+
+      if (!subjectId || !String(subjectId).trim()) {
+        return res.status(400).json({ error: "Vui lòng chọn môn học tương ứng với ngân hàng đề." });
+      }
+
+      // Đọc file Excel từ buffer
+      const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) {
+        return res.status(400).json({ error: "File Excel không có trang tính (sheet) nào." });
+      }
+
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, defval: null });
+
+      const BLOOM_MAP: Record<string, 'easy' | 'medium' | 'hard'> = {
+        'NB': 'easy',
+        'TH': 'medium',
+        'VD': 'hard',
+      };
+
+      const questions: Array<{
+        subjectId: string;
+        chapter: string;
+        questionId: string;
+        question: string;
+        options: string[];
+        correctAnswer: string;
+        difficulty: 'easy' | 'medium' | 'hard';
+        bloomLevel: 'NB' | 'TH' | 'VD';
+        createdAt: any;
+      }> = [];
+
+      let skipped = 0;
+      const chapters: Record<string, number> = {};
+
+      // Bắt đầu từ dòng 10 trong Excel (index 9 trong mảng 0-indexed)
+      for (let r = 9; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || !Array.isArray(row)) {
+          continue;
+        }
+
+        const qid = row[2];
+        const content = row[3];
+        const a = row[4];
+        const b = row[5];
+        const c = row[6];
+        const d = row[7];
+        const correctLetter = row[8];
+        const bloom = row[9];
+
+        // Nếu cả mã câu và nội dung đều trống -> dòng trống cuối bảng, bỏ qua không tính lỗi
+        if ((qid === null || qid === undefined || String(qid).trim() === '') &&
+            (content === null || content === undefined || String(content).trim() === '')) {
+          continue;
+        }
+
+        // Kiểm tra thiếu trường bắt buộc
+        if (
+          qid === null || qid === undefined || String(qid).trim() === '' ||
+          content === null || content === undefined || String(content).trim() === '' ||
+          a === null || a === undefined || String(a).trim() === '' ||
+          b === null || b === undefined || String(b).trim() === '' ||
+          c === null || c === undefined || String(c).trim() === '' ||
+          d === null || d === undefined || String(d).trim() === '' ||
+          correctLetter === null || correctLetter === undefined || String(correctLetter).trim() === ''
+        ) {
+          skipped++;
+          continue;
+        }
+
+        const letter = String(correctLetter).trim().toUpperCase();
+        if (!['A', 'B', 'C', 'D'].includes(letter)) {
+          skipped++;
+          continue;
+        }
+
+        const options = [
+          String(a).trim(),
+          String(b).trim(),
+          String(c).trim(),
+          String(d).trim()
+        ];
+
+        const letterIndex = letter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        const correctAnswer = options[letterIndex];
+        if (!correctAnswer) {
+          skipped++;
+          continue;
+        }
+
+        const qidStr = String(qid).trim();
+        const m = qidStr.match(/CH(\d+)/i);
+        const chapter = m ? m[1] : "00";
+
+        const rawBloom = bloom ? String(bloom).trim().toUpperCase() : 'TH';
+        const bloomLevel: 'NB' | 'TH' | 'VD' = (rawBloom === 'NB' || rawBloom === 'TH' || rawBloom === 'VD') ? rawBloom : 'TH';
+        const difficulty = BLOOM_MAP[bloomLevel] || 'medium';
+
+        questions.push({
+          subjectId: String(subjectId).trim(),
+          chapter,
+          questionId: qidStr,
+          question: String(content).trim(),
+          options,
+          correctAnswer,
+          difficulty,
+          bloomLevel,
+          createdAt: serverTimestamp(),
+        });
+
+        chapters[chapter] = (chapters[chapter] || 0) + 1;
+      }
+
+      if (questions.length === 0) {
+        return res.json({
+          success: true,
+          imported: 0,
+          skipped,
+          chapters: {},
+          message: "Không tìm thấy câu hỏi hợp lệ nào trong file (từ dòng 10 trở đi)."
+        });
+      }
+
+      // Ghi vào Firestore collection `question_bank` theo batch (tối đa 400 câu / batch)
+      let batch = writeBatch(db);
+      let batchOpCount = 0;
+
+      for (const q of questions) {
+        const docRef = doc(db, 'question_bank', q.questionId);
+        batch.set(docRef, q);
+        batchOpCount++;
+
+        if (batchOpCount % 400 === 0) {
+          await batch.commit();
+          batch = writeBatch(db);
+        }
+      }
+
+      if (batchOpCount % 400 !== 0) {
+        await batch.commit();
+      }
+
+      console.log(`[QuestionBank] Đã import thành công ${questions.length} câu vào Firestore (bỏ qua ${skipped} dòng).`);
+      return res.json({
+        success: true,
+        imported: questions.length,
+        skipped,
+        chapters
+      });
+    } catch (err: any) {
+      console.error("[QuestionBank] Import error:", err);
+      return res.status(500).json({ error: err.message || "Lỗi xử lý file Excel phía máy chủ." });
     }
   });
 

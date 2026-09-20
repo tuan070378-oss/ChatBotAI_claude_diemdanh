@@ -33,8 +33,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
   // Dual-tab Control: 'import' for importing content/files, 'browse' for checking existing knowledge base
   const [adminTab, setAdminTab] = useState<'import' | 'browse'>('import');
   
-  // Sub-toggle for import tab: 'file' for PDF/DOCX/TXT uploads, 'manual' for typed content
-  const [importMode, setImportMode] = useState<'file' | 'manual'>('file');
+  // Sub-toggle for import tab: 'file' for PDF/DOCX/TXT uploads, 'manual' for typed content, 'question-bank' for Excel quiz questions
+  const [importMode, setImportMode] = useState<'file' | 'manual' | 'question-bank'>('file');
+  const [isImportingBank, setIsImportingBank] = useState(false);
 
   // Custom Notifications / Toast State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -191,6 +192,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
     // Trigger file checking / confirmation
     triggerFileUpload(file);
     if (e.target) e.target.value = '';
+  };
+
+  const handleQuestionBankUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingBank(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('subjectId', activeSubject);
+
+    try {
+      const response = await fetch('/api/import-question-bank', {
+        method: 'POST',
+        body: formData,
+      });
+
+      let result: any = {};
+      try {
+        result = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Máy chủ phản hồi dữ liệu không đúng định dạng JSON.');
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Lỗi khi import ngân hàng đề từ máy chủ.');
+      }
+
+      showToast(`✅ Đã import ${result.imported} câu (bỏ qua ${result.skipped || 0} dòng lỗi)`, 'success');
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || 'Lỗi khi import ngân hàng đề.', 'error');
+    } finally {
+      setIsImportingBank(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleManualAdd = async (e: React.FormEvent) => {
@@ -368,18 +405,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                       </select>
                     </div>
 
-                    {/* Chapter / Topic Index */}
-                    <div>
-                      <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Phân loại chương / chủ đề</label>
-                      <input 
-                        value={chapter}
-                        onChange={(e) => setChapter(e.target.value)}
-                        placeholder="VD: Chương 1 - Dung sai hình học"
-                        className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40 placeholder:text-gray-400"
-                      />
-                    </div>
+                    {/* Chapter / Topic Index (Ẩn khi nạp ngân hàng đề vì chương tự bóc từ mã câu) */}
+                    {importMode !== 'question-bank' && (
+                      <div>
+                        <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Phân loại chương / chủ đề</label>
+                        <input 
+                          value={chapter}
+                          onChange={(e) => setChapter(e.target.value)}
+                          placeholder="VD: Chương 1 - Dung sai hình học"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40 placeholder:text-gray-400"
+                        />
+                      </div>
+                    )}
 
-                    {/* Toggle Sub-input: File Upload vs Manual Copy-paste Text */}
+                    {/* Toggle Sub-input: File Upload vs Manual vs Ngân hàng đề */}
                     <div className="pt-2 border-t border-gray-100 dark:border-gray-800/50">
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Phương thức nạp</span>
@@ -397,6 +436,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                             className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'manual' ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-xs" : "text-gray-500")}
                           >
                             Dán văn bản
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setImportMode('question-bank')}
+                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'question-bank' ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-xs" : "text-gray-500")}
+                          >
+                            Ngân hàng đề
                           </button>
                         </div>
                       </div>
@@ -427,7 +473,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                             </div>
                           </div>
                         </div>
-                      ) : (
+                      ) : importMode === 'manual' ? (
                         /* Manual Text Form input */
                         <form onSubmit={handleManualAdd} className="space-y-3">
                           <textarea 
@@ -445,13 +491,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                             Nạp trực tiếp vào kho
                           </button>
                         </form>
+                      ) : (
+                        /* Question Bank Excel Upload box */
+                        <div className="relative group">
+                          <input 
+                            type="file"
+                            accept=".xlsx"
+                            onChange={handleQuestionBankUpload}
+                            disabled={isImportingBank}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-15"
+                            title="Chọn file Excel ngân hàng đề (.xlsx)"
+                          />
+                          <div className={cn(
+                            "py-6 px-4 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 text-center transition-all",
+                            isImportingBank 
+                              ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-400/50" 
+                              : "bg-white dark:bg-gray-800/30 border-gray-200 dark:border-gray-800 group-hover:border-blue-400 dark:group-hover:border-blue-800 cursor-pointer"
+                          )}>
+                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 group-hover:text-blue-500 group-hover:scale-105 transition-all">
+                              {isImportingBank ? <Loader2 className="w-6 h-6 animate-spin text-blue-600" /> : <FileText className="w-6 h-6" />}
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                {isImportingBank ? 'Đang đọc và import câu hỏi...' : 'Nhấn để chọn file Excel (.xlsx)'}
+                              </span>
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 font-medium">
+                                Định dạng chuẩn ngân hàng câu hỏi (dữ liệu bắt đầu từ dòng 10)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
 
                     <div className="p-3.5 bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100/30 dark:border-blue-800/10 rounded-2xl flex items-start gap-2.5">
                       <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                       <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed font-semibold">
-                        💡 Tài liệu nạp qua file sẽ được hệ thống băm nhỏ tự động để lưu trữ hiệu quả. Trợ lý AI sẽ tự động phân tích và lấy dữ liệu này làm cơ sở ưu tiên khi các bạn học sinh đặt câu hỏi kỹ thuật bên ngoài.
+                        {importMode === 'question-bank'
+                          ? '💡 File Excel chứa các câu hỏi trắc nghiệm chuẩn của giáo viên sẽ được nạp vào ngân hàng đề cố định. Mã câu hỏi (Cột C) làm ID duy nhất, import lại sẽ tự động cập nhật đè không sợ trùng.'
+                          : '💡 Tài liệu nạp qua file sẽ được hệ thống băm nhỏ tự động để lưu trữ hiệu quả. Trợ lý AI sẽ tự động phân tích và lấy dữ liệu này làm cơ sở ưu tiên khi các bạn học sinh đặt câu hỏi kỹ thuật bên ngoài.'}
                       </div>
                     </div>
 
