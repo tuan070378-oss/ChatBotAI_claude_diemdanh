@@ -29,6 +29,7 @@ interface OfficialTestParams {
   className: string;
   subjectId: string;
   studentName?: string;
+  count?: number;
 }
 
 const SUBJECTS: Subject[] = [
@@ -378,6 +379,8 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
     const name = params.get('name');
     const className = params.get('lop');
     const mon = params.get('mon');
+    const countParam = parseInt(params.get('count') || '40', 10);
+    const count = (countParam === 40 || countParam === 60) ? countParam : 40;
 
     if (name || className) {
       const merged: StudentInfo = {
@@ -402,6 +405,7 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
         className: (className || studentInfo.className || 'Chưa rõ lớp').trim(),
         subjectId: (mon || 'vat-lieu').trim(),
         studentName: (name || studentInfo.name || '').trim(),
+        count: count,
       });
       setOfficialTestError(null);
       setAppMode('official-test');
@@ -556,6 +560,7 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
                 className={officialTestParams.className}
                 subjectId={officialTestParams.subjectId}
                 studentName={officialTestParams.studentName}
+                count={officialTestParams.count}
                 subjectName={SUBJECTS.find(s => s.id === officialTestParams.subjectId)?.name}
                 onExit={() => setAppMode('select-mode')}
               />

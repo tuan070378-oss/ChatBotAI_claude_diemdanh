@@ -871,6 +871,11 @@ Yêu cầu phản hồi:
    * — vì response của Firestore chứa nguyên văn correctAnswer, sinh viên xem được qua tab
    * Network của DevTools dù React state có lọc hay không. Endpoint này đọc Firestore Ở SERVER
    * rồi mới strip correctAnswer, nên dữ liệu gửi về trình duyệt không bao giờ chứa đáp án đúng.
+   *
+   * Đồng thời: xáo trộn thứ tự câu hỏi + thứ tự đáp án riêng cho MỖI lần gọi (mỗi sinh viên
+   * nhận 1 thứ tự khác nhau, giảm chép bài theo số thứ tự câu), và giới hạn đúng số câu GV
+   * đã chọn lúc kích hoạt (?count=40|60). Nếu ngân hàng ít câu hơn count, lặp lại cho đủ —
+   * áp dụng như nhau cho mọi sinh viên cùng môn nên vẫn công bằng.
    */
   app.get("/api/official-test-questions", async (req, res) => {
     try {
@@ -881,18 +886,60 @@ Yêu cầu phản hồi:
       if (!subjectId) {
         return res.status(400).json({ error: "Thiếu subjectId." });
       }
+      const requestedCount = parseInt(String(req.query.count || "40"), 10);
+      const count = (requestedCount === 40 || requestedCount === 60) ? requestedCount : 40;
 
       const snapshot = await getDocs(query(collection(db, 'question_bank'), where('subjectId', '==', subjectId)));
-      const questions = snapshot.docs.map((d) => {
+      const bank = snapshot.docs.map((d) => {
         const data = d.data() as any;
+        const options = Array.isArray(data.options) ? [...data.options] : [];
+        // Xáo trộn thứ tự đáp án của riêng câu này — không ảnh hưởng chấm điểm vì
+        // server luôn so sánh bằng NỘI DUNG đáp án (correctAnswer), không phải vị trí A/B/C/D.
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]];
+        }
         return {
           id: data.questionId || d.id,
           question: data.question || '',
-          options: Array.isArray(data.options) ? data.options : [],
+          options,
           difficulty: data.difficulty || 'medium',
           // KHÔNG đưa correctAnswer, bloomLevel hay bất kỳ field nào khác vào response.
         };
       });
+
+      if (bank.length === 0) {
+        return res.json({ questions: [] });
+      }
+
+      // Xáo trộn thứ tự câu hỏi (Fisher–Yates)
+      const shuffleArr = <T,>(arr: T[]): T[] => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      };
+
+      let questions = shuffleArr(bank);
+      if (questions.length < count) {
+        // Ngân hàng chưa đủ số câu yêu cầu — lặp lại (xáo trộn lại mỗi vòng), gắn hậu tố
+        // vào id để không trùng key ở client, giữ nguyên nội dung/đáp án từng câu.
+        const filled: typeof bank = [];
+        let cycle = 0;
+        while (filled.length < count) {
+          const batch = shuffleArr(bank);
+          for (const q of batch) {
+            if (filled.length >= count) break;
+            filled.push(cycle === 0 ? q : { ...q, id: `${q.id}__x${cycle}` });
+          }
+          cycle++;
+        }
+        questions = filled;
+      } else {
+        questions = questions.slice(0, count);
+      }
 
       return res.json({ questions });
     } catch (e: any) {

@@ -32,6 +32,7 @@ interface OfficialTestProps {
   studentName?: string;
   subjectId: string;
   subjectName?: string;
+  count?: number;
   onExit?: () => void;
 }
 
@@ -42,6 +43,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
   studentName,
   subjectId,
   subjectName,
+  count = 40,
   onExit
 }) => {
   const [questions, setQuestions] = useState<SafeQuestion[]>([]);
@@ -69,7 +71,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
       setIsLoadingQuestions(true);
       setLoadError(null);
       try {
-        const response = await fetch(`/api/official-test-questions?subjectId=${encodeURIComponent(subjectId)}`);
+        const response = await fetch(`/api/official-test-questions?subjectId=${encodeURIComponent(subjectId)}&count=${encodeURIComponent(count)}`);
         const data = await response.json().catch(() => ({}));
         if (!isMounted) return;
 
@@ -109,7 +111,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [subjectId, subjectName]);
+  }, [subjectId, subjectName, count]);
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
