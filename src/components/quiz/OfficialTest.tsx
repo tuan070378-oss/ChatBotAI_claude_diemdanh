@@ -15,7 +15,6 @@ import {
   RefreshCw,
   BookOpen
 } from 'lucide-react';
-import { fetchQuestionBank } from '../../services/questionBank';
 import { cn, cleanMathText } from '../../lib/utils';
 
 // Client-safe Question representation (guarantees correctAnswer NEVER touches client memory)
@@ -70,14 +69,22 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
       setIsLoadingQuestions(true);
       setLoadError(null);
       try {
-        const rawBank = await fetchQuestionBank(subjectId);
+        const response = await fetch(`/api/official-test-questions?subjectId=${encodeURIComponent(subjectId)}`);
+        const data = await response.json().catch(() => ({}));
         if (!isMounted) return;
+
+        if (!response.ok) {
+          throw new Error(data.error || `Không thể tải đề thi (mã lỗi ${response.status}).`);
+        }
+
+        const rawBank: SafeQuestion[] = Array.isArray(data.questions) ? data.questions : [];
 
         if (!rawBank || rawBank.length === 0) {
           throw new Error(`Chưa có câu hỏi nào trong ngân hàng đề của môn ${subjectName || subjectId}. Vui lòng liên hệ giảng viên.`);
         }
 
-        // SANITIZATION: Chỉ trích xuất id, question, options (loại bỏ hoàn toàn correctAnswer & explanation)
+        // Server đã lọc sẵn — chỉ còn id, question, options, difficulty. Không cần lọc thêm ở đây,
+        // nhưng vẫn giữ bước map tường minh để không vô tình lưu field lạ nào vào state.
         const sanitizedList: SafeQuestion[] = rawBank.map((q) => ({
           id: q.id,
           question: q.question,

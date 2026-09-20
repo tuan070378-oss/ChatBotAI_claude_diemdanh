@@ -865,6 +865,42 @@ Yêu cầu phản hồi:
     }
   });
 
+  /**
+   * Trả về câu hỏi ĐÃ LỌC SẴN (không có correctAnswer) cho luồng Kiểm tra chính thức.
+   * QUAN TRỌNG: không dùng fetchQuestionBank() (Firestore Client SDK) ở client cho luồng này
+   * — vì response của Firestore chứa nguyên văn correctAnswer, sinh viên xem được qua tab
+   * Network của DevTools dù React state có lọc hay không. Endpoint này đọc Firestore Ở SERVER
+   * rồi mới strip correctAnswer, nên dữ liệu gửi về trình duyệt không bao giờ chứa đáp án đúng.
+   */
+  app.get("/api/official-test-questions", async (req, res) => {
+    try {
+      if (!db) {
+        return res.status(500).json({ error: "Firebase Firestore chưa được cấu hình trên máy chủ." });
+      }
+      const subjectId = String(req.query.subjectId || "").trim();
+      if (!subjectId) {
+        return res.status(400).json({ error: "Thiếu subjectId." });
+      }
+
+      const snapshot = await getDocs(query(collection(db, 'question_bank'), where('subjectId', '==', subjectId)));
+      const questions = snapshot.docs.map((d) => {
+        const data = d.data() as any;
+        return {
+          id: data.questionId || d.id,
+          question: data.question || '',
+          options: Array.isArray(data.options) ? data.options : [],
+          difficulty: data.difficulty || 'medium',
+          // KHÔNG đưa correctAnswer, bloomLevel hay bất kỳ field nào khác vào response.
+        };
+      });
+
+      return res.json({ questions });
+    } catch (e: any) {
+      console.error("[OfficialTestQuestions] Lỗi:", e);
+      return res.status(500).json({ error: e.message || "Lỗi tải đề kiểm tra." });
+    }
+  });
+
   app.post("/api/submit-official-test", async (req, res) => {
     try {
       if (!db) {
