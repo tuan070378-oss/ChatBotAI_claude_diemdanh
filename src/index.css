@@ -1,12 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --color-gray-950: #030712;
+
+  /* Design system "Cơ khí Lửa" — nền navy đậm, nhấn gradient lửa, viền kim loại rõ nét */
+  --color-navy: #0E1420;
+  --color-navy-panel: #151D2E;
+  --color-steel: #2A3F5F;
+  --color-metal: #C9CED6;
+  --color-fire-1: #FF6B1A;
+  --color-fire-2: #FFB347;
 }
+
+/* Nền lưới kỹ thuật — CSS thuần, không phải ảnh, chi phí hiệu năng gần như bằng 0 */
+.technical-grid-bg {
+  background-image:
+    linear-gradient(var(--color-steel) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-steel) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.fire-gradient-text {
+  background: linear-gradient(135deg, var(--color-fire-1), var(--color-fire-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.fire-gradient-bg {
+  background: linear-gradient(135deg, var(--color-fire-1), var(--color-fire-2));
+}
+
 
 /* Custom Cursor & Aurora Cosmic Specifics */
 .cosmic-cursor {
@@ -197,4 +225,3 @@ body:hover .cosmic-cursor {
 ::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
-

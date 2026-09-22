@@ -66,7 +66,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <img 
                   src={img} 
                   alt={`Xem trước ảnh ${idx + 1}`} 
-                  className="w-16 h-16 object-cover rounded-xl border-2 border-cyan-500 shadow-md"
+                  className="w-16 h-16 object-cover rounded-xl border-2 border-fire-2 shadow-md"
                   referrerPolicy="no-referrer"
                 />
                 <button 
@@ -97,7 +97,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onClick={() => fileInputRef.current?.click()}
             disabled={selectedImages.length >= 3}
             className={cn(
-              "h-12 w-12 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700/80 text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-gray-200 dark:border-gray-700/60 transition-all flex items-center justify-center shrink-0 focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none disabled:opacity-40 cursor-pointer",
+              "h-12 w-12 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700/80 text-gray-600 dark:text-gray-300 hover:text-fire-2 dark:hover:text-fire-2 border border-gray-200 dark:border-gray-700/60 transition-all flex items-center justify-center shrink-0 focus-visible:ring-2 focus-visible:ring-fire-2 outline-none disabled:opacity-40 cursor-pointer",
             )}
             aria-label="Tải lên ảnh bài tập hoặc bản vẽ kỹ thuật (Tối đa 3 ảnh)"
             title="Tải lên ảnh (Tối đa 3)"
@@ -108,10 +108,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           <button
             onClick={toggleListening}
             className={cn(
-              "h-12 w-12 rounded-2xl transition-all flex items-center justify-center shrink-0 focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none cursor-pointer",
+              "h-12 w-12 rounded-2xl transition-all flex items-center justify-center shrink-0 focus-visible:ring-2 focus-visible:ring-fire-2 outline-none cursor-pointer",
               isListening 
                 ? "bg-rose-600 text-white shadow-md shadow-rose-500/30 animate-pulse" 
-                : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700/80 text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-gray-200 dark:border-gray-700/60"
+                : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700/80 text-gray-600 dark:text-gray-300 hover:text-fire-2 dark:hover:text-fire-2 border border-gray-200 dark:border-gray-700/60"
             )}
             aria-label={isListening ? "Dừng nghe giọng nói" : "Bắt đầu nói để nhập liệu"}
             title={isListening ? "Đang nghe... Bấm để dừng" : "Nói để nhập liệu"}
@@ -131,13 +131,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               }}
               placeholder={selectedImages.length > 0 ? "Thêm mô tả cho ảnh..." : "Đặt câu hỏi hoặc gõ công thức..."}
               aria-label="Nội dung câu hỏi gửi AI"
-              className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700/80 rounded-2xl focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 outline-none resize-none min-h-[48px] max-h-32 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-xs"
+              className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700/80 rounded-2xl focus-visible:ring-2 focus-visible:ring-fire-2 focus-visible:border-fire-2 outline-none resize-none min-h-[48px] max-h-32 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-xs"
               rows={1}
             />
             <button
               onClick={onSend}
               disabled={isLoading || (!input.trim() && selectedImages.length === 0)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 rounded-xl disabled:opacity-40 disabled:hover:bg-cyan-600 transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white fire-gradient-bg hover:opacity-90 rounded-xl disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-fire-2 outline-none cursor-pointer"
               aria-label="Gửi tin nhắn"
               title="Gửi"
             >
@@ -146,7 +146,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
         </div>
       </div>
-      <p className="text-[10px] text-center text-cyan-600 dark:text-cyan-400 mt-2 uppercase tracking-widest font-bold">
+      <p className="text-[10px] text-center text-fire-2 mt-2 uppercase tracking-widest font-bold">
         Học tập thực chất - Vững chắc tay nghề
       </p>
     </div>

@@ -67,7 +67,7 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column: Select Subject */}
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-fire-1 dark:text-fire-2 flex items-center gap-2">
             <BookOpen size={14} /> Bước 1: Chọn môn học ôn luyện
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -78,12 +78,12 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                 className={cn(
                   "p-3.5 sm:p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer",
                   subjectId === s.id 
-                    ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/40 ring-2 ring-cyan-500/30 shadow-xs" 
-                    : "border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/60 hover:border-cyan-400/50"
+                    ? "border-fire-2 bg-orange-50 dark:bg-navy-panel ring-2 ring-fire-2/30 shadow-xs" 
+                    : "border-gray-200 dark:border-steel bg-white/90 dark:bg-gray-900/60 hover:border-fire-2/50"
                 )}
               >
-                <s.icon size={20} className={cn("mb-2 transition-transform group-hover:scale-110", subjectId === s.id ? "text-cyan-600 dark:text-cyan-400" : "text-gray-500 group-hover:text-cyan-600")} />
-                <span className={cn("text-xs sm:text-sm font-bold block", subjectId === s.id ? "text-cyan-900 dark:text-cyan-300" : "text-gray-800 dark:text-gray-300")}>
+                <s.icon size={20} className={cn("mb-2 transition-transform group-hover:scale-110", subjectId === s.id ? "text-fire-1 dark:text-fire-2" : "text-gray-500 group-hover:text-fire-1")} />
+                <span className={cn("text-xs sm:text-sm font-bold block", subjectId === s.id ? "text-orange-900 dark:text-fire-2" : "text-gray-800 dark:text-gray-300")}>
                   {s.name}
                 </span>
               </button>
@@ -92,9 +92,9 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
         </div>
 
         {/* Right Column: Settings */}
-        <div className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-xs">
+        <div className="bg-white/90 dark:bg-navy-panel backdrop-blur-xl border border-gray-200 dark:border-steel rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-fire-1 dark:text-fire-2 flex items-center gap-2">
               <Layers size={14} /> Nguồn đề
             </label>
             <div className="flex gap-2">
@@ -103,8 +103,8 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                 className={cn(
                   "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer",
                   source === 'ai'
-                    ? "bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 shadow-xs"
-                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                    ? "bg-fire-1 hover:bg-fire-1/90 text-white border-fire-1 shadow-xs"
+                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-steel hover:border-fire-2/40"
                 )}
               >
                 Ôn tập AI
@@ -114,8 +114,8 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                 className={cn(
                   "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer",
                   source === 'bank'
-                    ? "bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 shadow-xs"
-                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                    ? "bg-fire-1 hover:bg-fire-1/90 text-white border-fire-1 shadow-xs"
+                    : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-steel hover:border-fire-2/40"
                 )}
               >
                 Kiểm tra
@@ -130,13 +130,13 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
 
           {source === 'ai' && (
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-fire-1 dark:text-fire-2 flex items-center gap-2">
               <Layers size={14} /> Bước 2: Chương / Chủ đề
             </label>
             <select
               value={chapter}
               onChange={(e) => setChapter(e.target.value)}
-              className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-900 dark:text-gray-100 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 cursor-pointer shadow-2xs"
+              className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-900 dark:text-gray-100 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-fire-2/50 cursor-pointer shadow-2xs"
             >
               {currentChapters.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -147,7 +147,7 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
 
           {source === 'ai' && (
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-fire-1 dark:text-fire-2 flex items-center gap-2">
               <BarChart3 size={14} /> Bước 3: Mức độ đề
             </label>
             <div className="flex gap-2">
@@ -158,8 +158,8 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                   className={cn(
                     "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer",
                     difficulty === d 
-                      ? "bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 shadow-xs" 
-                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                      ? "bg-fire-1 hover:bg-fire-1/90 text-white border-fire-1 shadow-xs" 
+                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-steel hover:border-fire-2/40"
                   )}
                 >
                   {d === 'easy' ? 'Dễ' : d === 'medium' ? 'Vừa' : 'Khó'}
@@ -170,11 +170,11 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center justify-between">
+            <label className="text-xs font-bold uppercase tracking-wider text-fire-1 dark:text-fire-2 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Settings size={14} /> {source === 'ai' ? 'Bước 4: Số lượng câu:' : 'Bước 2: Số lượng câu hỏi kiểm tra:'}
               </span>
-              <span className="text-cyan-600 dark:text-cyan-400 font-extrabold">{count} câu</span>
+              <span className="text-fire-1 dark:text-fire-2 font-extrabold">{count} câu</span>
             </label>
             {source === 'bank' ? (
               <div className="grid grid-cols-2 gap-3 pt-1">
@@ -184,12 +184,12 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                   className={cn(
                     "p-3 rounded-2xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
                     count === 40
-                      ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
-                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                      ? "bg-fire-1 text-white border-fire-1 shadow-xs"
+                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-steel hover:border-fire-2/40"
                   )}
                 >
                   <span className="text-base sm:text-lg font-extrabold">40 câu</span>
-                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 40 ? "text-cyan-100" : "text-gray-400")}>
+                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 40 ? "text-orange-100" : "text-gray-400")}>
                     Mặc định
                   </span>
                 </button>
@@ -199,12 +199,12 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                   className={cn(
                     "p-3 rounded-2xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
                     count === 60
-                      ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
-                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-cyan-500/40"
+                      ? "bg-fire-1 text-white border-fire-1 shadow-xs"
+                      : "bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-steel hover:border-fire-2/40"
                   )}
                 >
                   <span className="text-base sm:text-lg font-extrabold">60 câu</span>
-                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 60 ? "text-cyan-100" : "text-gray-400")}>
+                  <span className={cn("text-[10px] font-semibold uppercase tracking-wider", count === 60 ? "text-orange-100" : "text-gray-400")}>
                     Nâng cao
                   </span>
                 </button>
@@ -218,7 +218,7 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
                   step="1"
                   value={count}
                   onChange={(e) => setCount(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-fire-1"
                 />
                 <div className="flex justify-between text-[11px] text-gray-500 px-1 font-mono">
                   <span>3 câu</span>
@@ -233,7 +233,7 @@ export const QuizSetup: React.FC<QuizSetupProps> = ({ subjects, onStart }) => {
       <div className="flex justify-center pt-2">
         <button
           onClick={() => onStart({ subjectId, chapter, difficulty, count, source })}
-          className="w-full sm:w-auto px-8 sm:px-12 py-3.5 sm:py-4 bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-cyan-600/20 transition-all group cursor-pointer"
+          className="w-full sm:w-auto px-8 sm:px-12 py-3.5 sm:py-4 fire-gradient-bg hover:opacity-90 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-fire-1/20 transition-all group cursor-pointer"
         >
           <Play size={18} className="fill-current group-hover:scale-110 transition-transform" />
           {source === 'ai' ? 'Bắt đầu ôn tập cùng AI' : 'Bắt đầu làm kiểm tra'}

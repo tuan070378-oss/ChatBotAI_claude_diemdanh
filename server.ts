@@ -948,6 +948,51 @@ Yêu cầu phản hồi:
     }
   });
 
+/**
+ * Gọi sang Apps Script (Điểm danh Auto) để ghi điểm, có tự động thử lại khi hệ thống
+ * báo bận (LockService timeout phía Apps Script khi nhiều sinh viên nộp bài cùng lúc).
+ * Chỉ thử lại với lỗi TẠM THỜI (bận / lỗi mạng / phản hồi hỏng) — không thử lại với lỗi
+ * dứt khoát (đã nộp trùng, sai mã bí mật, đã có điểm cũ...) vì thử lại không giúp ích gì.
+ */
+async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchParams, maxAttempts = 3): Promise<{ data?: any; networkError?: string }> {
+  let lastNetworkError = '';
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(targetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: postBody,
+      });
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, attempt * 1000)); // 1s, 2s...
+          continue;
+        }
+        return { networkError: `Điểm danh Auto phản hồi không hợp lệ (mã ${res.status}).` };
+      }
+
+      const isBusy = data.status !== 'success' && typeof data.message === 'string' && data.message.indexOf('Hệ thống bận') !== -1;
+      if (isBusy && attempt < maxAttempts) {
+        console.warn(`[OfficialTest] Apps Script báo bận, thử lại lần ${attempt + 1}/${maxAttempts}...`);
+        await new Promise(r => setTimeout(r, attempt * 1000));
+        continue;
+      }
+      return { data };
+    } catch (networkErr: any) {
+      lastNetworkError = networkErr.message || 'Lỗi mạng';
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, attempt * 1000));
+        continue;
+      }
+    }
+  }
+  return { networkError: lastNetworkError || 'Không thể kết nối tới hệ thống Điểm danh Auto.' };
+}
+
   app.post("/api/submit-official-test", async (req, res) => {
     try {
       if (!db) {
@@ -1045,28 +1090,12 @@ Yêu cầu phản hồi:
         score: String(finalScore),
       });
 
-      let appScriptRes: Response;
-      try {
-        appScriptRes = await fetch(targetUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: postBody,
-        });
-      } catch (networkErr: any) {
-        console.error("[OfficialTest] Không thể kết nối tới Apps Script:", networkErr);
-        return res.status(502).json({ 
-          error: `Không thể kết nối tới hệ thống Điểm danh Auto: ${networkErr.message || 'Lỗi mạng'}. Điểm số chưa được lưu.` 
-        });
-      }
+      const { data: scriptData, networkError } = await postToAppsScriptWithRetry(targetUrl, postBody);
 
-      let scriptData: any = {};
-      try {
-        scriptData = await appScriptRes.json();
-      } catch (jsonErr) {
-        const rawText = await appScriptRes.text().catch(() => '');
-        console.error("[OfficialTest] Phản hồi không phải JSON từ Apps Script:", rawText);
-        return res.status(502).json({ 
-          error: `Hệ thống Điểm danh Auto phản hồi không hợp lệ (${appScriptRes.status}). Điểm chưa được xác nhận vào bảng điểm.` 
+      if (networkError) {
+        console.error("[OfficialTest] Không thể ghi điểm sau khi đã thử lại:", networkError);
+        return res.status(502).json({
+          error: `Không thể kết nối tới hệ thống Điểm danh Auto sau nhiều lần thử: ${networkError}. Điểm số chưa được lưu — vui lòng thử nộp lại.`
         });
       }
 

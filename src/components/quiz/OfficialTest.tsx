@@ -191,7 +191,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
   if (isLoadingQuestions) {
     return (
       <div className="max-w-2xl mx-auto mt-12 p-8 text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl space-y-4 animate-in fade-in duration-500">
-        <div className="w-16 h-16 mx-auto bg-cyan-50 dark:bg-cyan-950/50 rounded-2xl flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+        <div className="w-16 h-16 mx-auto bg-orange-50 dark:bg-navy-panel rounded-2xl flex items-center justify-center text-fire-1 dark:text-fire-2">
           <Loader2 size={32} className="animate-spin" />
         </div>
         <h3 className="text-lg font-extrabold text-gray-900 dark:text-white">Đang niêm phong & chuẩn bị đề kiểm tra...</h3>
@@ -324,7 +324,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
               <GraduationCap size={14} className="text-gray-400" /> {className}
             </span>
           </div>
-          <div className="font-bold text-xs text-cyan-600 dark:text-cyan-400">
+          <div className="font-bold text-xs text-fire-1 dark:text-fire-2">
             Đã làm: {answeredCount} / {totalQuestions} câu
           </div>
         </div>
@@ -359,7 +359,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
                   isCurrent 
                     ? "ring-2 ring-red-500 bg-red-500 text-white shadow-xs"
                     : isAnswered
-                      ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300"
+                      ? "bg-orange-100 text-fire-1 dark:bg-navy-panel dark:text-fire-2"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 )}
                 title={`Câu ${idx + 1}: ${isAnswered ? 'Đã chọn đáp án' : 'Chưa trả lời'}`}

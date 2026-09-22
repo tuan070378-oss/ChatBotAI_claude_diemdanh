@@ -452,7 +452,7 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
                 <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-3xl overflow-hidden shadow-xl shadow-cyan-500/15 ring-2 ring-cyan-500/30 hover:scale-105 duration-300 transition-transform bg-gray-100 dark:bg-gray-800">
                     <img 
                         src={cyberHorseLogo} 
-                        alt="Biểu trưng Lê Tuấn - Minh Vân"
+                        alt="Biểu trưng Lê Tuấn"
                         className="w-full h-full object-cover"
                         loading="eager"
                         width={112}

@@ -143,11 +143,11 @@ export const QuizManager: React.FC<QuizManagerProps> = ({ subjects, onBackToHome
             className="flex flex-col items-center justify-center py-20 space-y-6"
           >
             <div className="relative">
-                <div className="absolute inset-0 bg-blue-500 rounded-full blur-2xl opacity-20 animate-pulse" />
-                <BrainCircuit size={64} className="text-blue-600 animate-bounce relative z-10" />
+                <div className="absolute inset-0 bg-fire-1 rounded-full blur-2xl opacity-20 animate-pulse" />
+                <BrainCircuit size={64} className="text-fire-1 dark:text-fire-2 animate-bounce relative z-10" />
             </div>
             <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-fire-2" />
                 <p className="text-lg font-bold text-gray-800 dark:text-white animate-pulse">{loadingMsg}</p>
                 <p className="text-sm text-gray-400">Điều này có thể mất 10-15 giây...</p>
             </div>
