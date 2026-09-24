@@ -50,8 +50,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         <div className={cn(
           "w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs transition-all",
           isUser 
-            ? "bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white" 
-            : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-cyan-600 dark:text-cyan-400"
+            ? "fire-gradient-bg text-white" 
+            : "bg-white dark:bg-navy-panel border border-gray-200 dark:border-steel text-fire-1 dark:text-fire-2"
         )}>
           {isUser ? <User size={17} /> : <Bot size={17} />}
         </div>
@@ -59,7 +59,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         <div className={cn(
           "px-4 sm:px-5 py-3.5 rounded-2xl shadow-xs max-w-[88%] sm:max-w-[82%] transition-all border",
           isUser 
-            ? "bg-cyan-600 dark:bg-cyan-700 border-cyan-500/40 text-white rounded-tr-xs" 
+            ? "bg-fire-1 border-transparent text-white rounded-tr-xs" 
             : "bg-white/95 dark:bg-gray-900/90 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-xs shadow-sm"
         )}>
           <div className={cn(
@@ -90,10 +90,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               <button
                 onClick={() => isSpeaking ? onStopSpeaking() : onSpeak(cleanMathText(message.content))}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none cursor-pointer",
+                  "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-fire-2 outline-none cursor-pointer",
                   isSpeaking 
                     ? "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300" 
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-fire-1 dark:hover:text-fire-2"
                 )}
                 aria-label={isSpeaking ? "Dừng đọc phản hồi" : "Nghe đọc phản hồi bằng giọng nói"}
                 title={isSpeaking ? "Dừng đọc" : "Nghe đọc"}
@@ -113,7 +113,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
               <button
                 onClick={handleCopy}
-                className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 text-[11px] font-bold transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-fire-1 dark:hover:text-fire-2 text-[11px] font-bold transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-fire-2 outline-none cursor-pointer"
                 aria-label="Sao chép nội dung câu trả lời"
                 title="Sao chép văn bản"
               >
@@ -134,7 +134,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
           {isLast && isLoading && !isUser && !message.content && (
             <div className="flex items-center gap-2 py-1">
-              <Loader2 className="w-4 h-4 animate-spin text-cyan-600 dark:text-cyan-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-fire-1 dark:text-fire-2" />
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium animate-pulse">Thầy/Cô đang suy nghĩ & soạn câu trả lời...</span>
             </div>
           )}

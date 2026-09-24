@@ -10,10 +10,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 export default function App() {
   return (
     <ErrorBoundary>
-      <main className="min-h-screen font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-800 dark:selection:text-cyan-200">
+      <main className="min-h-screen font-sans antialiased selection:bg-fire-2/30 selection:text-fire-1 dark:selection:text-fire-2">
         <ChatInterface />
       </main>
     </ErrorBoundary>
   );
 }
-

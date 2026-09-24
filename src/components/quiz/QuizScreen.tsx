@@ -72,12 +72,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
       <div className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-2xl p-3.5 sm:p-4 flex items-center gap-4 shadow-xs">
         <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <motion.div 
-            className="h-full bg-cyan-600 dark:bg-cyan-500 rounded-full shadow-xs" 
+            className="h-full bg-fire-1 dark:bg-fire-2 rounded-full shadow-xs" 
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-xs font-extrabold text-cyan-800 dark:text-cyan-300 min-w-[60px] text-right font-mono">
+        <span className="text-xs font-extrabold text-fire-1 dark:text-fire-2 min-w-[60px] text-right font-mono">
           {currentIndex + 1} / {questions.length}
         </span>
       </div>
@@ -95,12 +95,12 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
             <div className="flex items-start gap-3.5 sm:gap-4">
               <div className={cn(
                 "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
-                isMcq ? "bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300" : "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300"
+                isMcq ? "bg-orange-100 dark:bg-navy-panel text-fire-1 dark:text-fire-2" : "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300"
               )}>
                 {isMcq ? <CheckCircle2 size={22} /> : <HelpCircle size={22} />}
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-600 dark:text-cyan-400">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-fire-1 dark:text-fire-2">
                   {isMcq ? "Câu hỏi Trắc nghiệm" : "Câu hỏi Tự luận giải thích"}
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white leading-relaxed">
@@ -122,19 +122,19 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
                         className={cn(
                           "p-3.5 sm:p-4 rounded-2xl border text-left transition-all flex items-center gap-3 sm:gap-4 group cursor-pointer",
                           isSelected 
-                            ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/40 ring-2 ring-cyan-500/30 shadow-xs" 
-                            : "border-gray-200 dark:border-gray-800 hover:border-cyan-400/60 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                            ? "border-fire-2 bg-orange-50 dark:bg-navy-panel ring-2 ring-fire-2/30 shadow-xs" 
+                            : "border-gray-200 dark:border-steel hover:border-fire-2/60 hover:bg-gray-50 dark:hover:bg-gray-800/40"
                         )}
                       >
                         <div className={cn(
                           "w-6 h-6 rounded-full border flex items-center justify-center transition-all shrink-0 font-bold text-xs",
-                          isSelected ? "bg-cyan-600 border-cyan-600 text-white" : "border-gray-300 dark:border-gray-600 text-gray-500"
+                          isSelected ? "bg-fire-1 border-fire-1 text-white" : "border-gray-300 dark:border-gray-600 text-gray-500"
                         )}>
                           {String.fromCharCode(65 + idx)}
                         </div>
                         <span className={cn(
                           "text-xs sm:text-sm font-medium",
-                          isSelected ? "text-cyan-950 dark:text-cyan-100 font-bold" : "text-gray-800 dark:text-gray-200"
+                          isSelected ? "text-orange-950 dark:text-fire-2 font-bold" : "text-gray-800 dark:text-gray-200"
                         )}>
                           {cleanMathText(opt)}
                         </span>
@@ -149,7 +149,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
                     onChange={(e) => setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: e.target.value }))}
                     placeholder="Hãy nêu khái niệm, các bước tính toán hoặc phân tích của em..."
                     aria-label="Câu trả lời tự luận"
-                    className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-cyan-500 outline-none text-gray-900 dark:text-white text-xs sm:text-sm min-h-[140px] transition-all"
+                    className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-fire-2 outline-none text-gray-900 dark:text-white text-xs sm:text-sm min-h-[140px] transition-all"
                   />
                   {!essayGrading[currentQuestion.id] && (
                     <button
@@ -181,7 +181,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
             <button
                 onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
                 disabled={currentIndex === 0}
-                className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-cyan-600 hover:border-cyan-500 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-fire-1 hover:border-fire-2 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5 cursor-pointer"
                 aria-label="Quay lại câu trước"
             >
                 <ChevronLeft size={16} />
@@ -190,7 +190,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onComplete })
             <button
                 onClick={handleNext}
                 disabled={isLoading || !userAnswers[currentQuestion.id]}
-                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-cyan-600/20 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                className="px-6 sm:px-8 py-2.5 sm:py-3 fire-gradient-bg hover:opacity-90 active:scale-98 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-fire-1/20 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
                 {isLoading ? (
                     <Loader2 size={18} className="animate-spin" />

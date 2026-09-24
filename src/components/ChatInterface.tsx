@@ -449,10 +449,10 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
           <div className="max-w-4xl mx-auto mt-6 sm:mt-12 p-4 space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
             
              <div className="text-center space-y-3">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-3xl overflow-hidden shadow-xl shadow-cyan-500/15 ring-2 ring-cyan-500/30 hover:scale-105 duration-300 transition-transform bg-gray-100 dark:bg-gray-800">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-3xl overflow-hidden shadow-xl shadow-fire-1/15 ring-2 ring-fire-2/30 hover:scale-105 duration-300 transition-transform bg-gray-100 dark:bg-gray-800">
                     <img 
                         src={cyberHorseLogo} 
-                        alt="Biểu trưng Lê Tuấn"
+                        alt="Biểu trưng Lê Tuấn - Minh Vân"
                         className="w-full h-full object-cover"
                         loading="eager"
                         width={112}
@@ -478,19 +478,19 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 px-2 sm:px-4">
                 <button 
                     onClick={() => setAppMode('chat')}
-                    className="group relative bg-white/90 dark:bg-gray-900/85 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-8 text-left hover:border-cyan-500 dark:hover:border-cyan-500 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer"
+                    className="group relative bg-white/90 dark:bg-gray-900/85 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-8 text-left hover:border-fire-2 dark:hover:border-fire-2 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer"
                 >
-                    <div className="absolute top-6 right-8 text-cyan-100 dark:text-cyan-950 group-hover:text-cyan-500/30 transition-colors">
+                    <div className="absolute top-6 right-8 text-orange-100 dark:text-navy-panel group-hover:text-fire-2/30 transition-colors">
                         <Layers size={44} />
                     </div>
-                    <div className="w-13 h-13 bg-cyan-100 dark:bg-cyan-950/50 rounded-2xl flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-5 group-hover:scale-110 transition-transform">
+                    <div className="w-13 h-13 bg-orange-100 dark:bg-navy-panel rounded-2xl flex items-center justify-center text-fire-1 dark:text-fire-2 mb-5 group-hover:scale-110 transition-transform">
                         <MessageSquare size={26} />
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">Hỏi đáp AI</h3>
                     <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed">
                         Tra cứu kiến thức, giải thích khái niệm bản chất, công thức và ứng dụng thực tế tại xưởng cùng Thầy/Cô.
                     </p>
-                    <div className="mt-6 flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold text-xs uppercase tracking-wider">
+                    <div className="mt-6 flex items-center gap-2 text-fire-1 dark:text-fire-2 font-bold text-xs uppercase tracking-wider">
                         Bắt đầu trao đổi <ChevronRight size={14} />
                     </div>
                 </button>
@@ -516,7 +516,7 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
              </div>
 
              <div className="text-center pt-2">
-                 <p className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-[0.25em] mb-4">Học tập thực chất - Vững chắc tay nghề</p>
+                 <p className="text-[10px] text-fire-1 dark:text-fire-2 font-bold uppercase tracking-[0.25em] mb-4">Học tập thực chất - Vững chắc tay nghề</p>
                  
                  {Object.keys(stats).length > 0 && (
                      <div className="inline-flex flex-wrap justify-center gap-3 p-3 sm:p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs">
@@ -587,9 +587,9 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
                   ))}
                 </div>
 
-                <div className="bg-cyan-50/80 dark:bg-cyan-950/30 backdrop-blur-sm border border-cyan-200/80 dark:border-cyan-800/50 rounded-2xl p-4 text-xs sm:text-sm text-cyan-900 dark:text-cyan-200 shadow-xs space-y-2.5">
-                  <p className="font-bold flex items-center gap-2 text-cyan-800 dark:text-cyan-300">
-                    <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                <div className="bg-orange-50/80 dark:bg-navy-panel backdrop-blur-sm border border-orange-200/80 dark:border-steel rounded-2xl p-4 text-xs sm:text-sm text-orange-900 dark:text-metal shadow-xs space-y-2.5">
+                  <p className="font-bold flex items-center gap-2 text-fire-1 dark:text-fire-2">
+                    <span className="flex h-2 w-2 rounded-full bg-fire-2 animate-pulse" />
                     Gợi ý câu hỏi nhanh (nhấn để hỏi ngay):
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -602,9 +602,9 @@ Các em vui lòng thực hiện các bước sau để tiếp tục học tập:
                       <button
                         key={idx}
                         onClick={() => handleSend(suggestion)}
-                        className="text-left text-xs bg-white dark:bg-gray-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-xl border border-cyan-200/80 dark:border-gray-700 transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1.5"
+                        className="text-left text-xs bg-white dark:bg-gray-800 hover:bg-orange-100 dark:hover:bg-navy-panel text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-xl border border-orange-200/80 dark:border-steel transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1.5"
                       >
-                        <span className="text-cyan-500">👉</span> {suggestion}
+                        <span className="text-fire-2">👉</span> {suggestion}
                       </button>
                     ))}
                   </div>

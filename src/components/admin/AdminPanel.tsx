@@ -295,10 +295,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
         <div className="mb-4 w-[460px] max-w-[92vw] h-[82vh] max-h-[750px] bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-gray-800/80 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300 relative">
           
           {/* Top Header */}
-          <div className="px-6 py-4.5 border-b border-gray-100 dark:border-gray-800/60 flex items-center justify-between bg-blue-50/50 dark:bg-blue-950/20">
+          <div className="px-6 py-4.5 border-b border-gray-100 dark:border-gray-800/60 flex items-center justify-between bg-orange-50/50 dark:bg-navy-panel/20">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-xl">
-                <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-fire-2/10 dark:bg-fire-2/10 rounded-xl">
+                <Database className="w-5 h-5 text-fire-1 dark:text-fire-2" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white text-base">Quản trị: Kho RAG</h3>
@@ -323,15 +323,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
               </div>
               <h4 className="font-bold text-gray-900 dark:text-white">Firestore Chưa Được Thiết Lập</h4>
               <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">
-                Hệ thống RAG cần một cơ sở dữ liệu để tìm kiếm ngữ cảnh. Vui lòng nhấn nút <b className="text-blue-600 dark:text-blue-400">"Set up Firebase"</b> trong bảng điều khiển AI Studio của bạn để cấu hình.
+                Hệ thống RAG cần một cơ sở dữ liệu để tìm kiếm ngữ cảnh. Vui lòng nhấn nút <b className="text-fire-1 dark:text-fire-2">"Set up Firebase"</b> trong bảng điều khiển AI Studio của bạn để cấu hình.
               </p>
             </div>
           ) : !isAuthenticated ? (
             /* Secure Passcode Screen */
             <div className="p-8 flex flex-col justify-center flex-1 space-y-5">
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/20 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3">
-                  <Database className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                <div className="w-16 h-16 bg-orange-50 dark:bg-navy-panel/20 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                  <Database className="w-8 h-8 text-fire-1 dark:text-fire-2" />
                 </div>
                 <h4 className="font-extrabold text-lg text-gray-900 dark:text-white tracking-tight">Khu Vực Hạn Chế</h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Xác minh mã nhận diện chuyên gia thiết kế</p>
@@ -342,12 +342,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                   value={enteredPassword}
                   onChange={(e) => setEnteredPassword(e.target.value)}
                   placeholder="Nhập mã bảo mật..."
-                  className="w-full p-3 px-4 rounded-2xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none text-sm focus:ring-2 focus:ring-blue-500/50 outline-none text-center font-mono placeholder:text-gray-400"
+                  className="w-full p-3 px-4 rounded-2xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none text-sm focus:ring-2 focus:ring-fire-2/50 outline-none text-center font-mono placeholder:text-gray-400"
                   autoFocus
                 />
                 <button 
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 cursor-pointer"
+                  className="w-full py-3 bg-fire-1 hover:bg-fire-1/85 text-white rounded-2xl font-bold transition-all shadow-lg shadow-fire-2/10 hover:shadow-fire-2/20 cursor-pointer"
                 >
                   Xác Thực Quản Trị
                 </button>
@@ -365,7 +365,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                   className={cn(
                     "flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer text-center",
                     adminTab === 'import' 
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" 
+                      ? "bg-fire-1 text-white shadow-md shadow-fire-2/10" 
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/40"
                   )}
                 >
@@ -377,7 +377,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                   className={cn(
                     "flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer text-center",
                     adminTab === 'browse' 
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" 
+                      ? "bg-fire-1 text-white shadow-md shadow-fire-2/10" 
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/40"
                   )}
                 >
@@ -397,7 +397,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                       <select 
                         value={activeSubject}
                         onChange={(e) => setActiveSubject(e.target.value)}
-                        className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-700 dark:text-gray-300 font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40"
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-700 dark:text-gray-300 font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-fire-2/40"
                       >
                         {SUBJECTS.map(s => (
                           <option key={s.id} value={s.id}>{s.name}</option>
@@ -413,7 +413,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                           value={chapter}
                           onChange={(e) => setChapter(e.target.value)}
                           placeholder="VD: Chương 1 - Dung sai hình học"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40 placeholder:text-gray-400"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-fire-2/40 placeholder:text-gray-400"
                         />
                       </div>
                     )}
@@ -426,21 +426,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                           <button
                             type="button"
                             onClick={() => setImportMode('file')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'file' ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'file' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
                           >
                             Tải file PDF/TXT
                           </button>
                           <button
                             type="button"
                             onClick={() => setImportMode('manual')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'manual' ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'manual' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
                           >
                             Dán văn bản
                           </button>
                           <button
                             type="button"
                             onClick={() => setImportMode('question-bank')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'question-bank' ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'question-bank' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
                           >
                             Ngân hàng đề
                           </button>
@@ -461,10 +461,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                           <div className={cn(
                             "py-6 px-4 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 text-center transition-all",
                             isUploading 
-                              ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-400/50" 
-                              : "bg-white dark:bg-gray-800/30 border-gray-200 dark:border-gray-800 group-hover:border-blue-400 dark:group-hover:border-blue-800 cursor-pointer"
+                              ? "bg-orange-50/50 dark:bg-navy-panel/20 border-fire-2/50" 
+                              : "bg-white dark:bg-gray-800/30 border-gray-200 dark:border-gray-800 group-hover:border-fire-2 dark:group-hover:border-fire-1 cursor-pointer"
                           )}>
-                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 group-hover:text-blue-500 group-hover:scale-105 transition-all">
+                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 group-hover:text-fire-2 group-hover:scale-105 transition-all">
                               <FileText className="w-6 h-6" />
                             </div>
                             <div>
@@ -480,12 +480,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             placeholder="Dán hoặc gõ nội dung tài liệu kỹ thuật dài cần ghi nhớ hoặc đồng bộ RAG..."
-                            className="w-full p-3 h-28 rounded-2xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40 resize-none placeholder:text-gray-400"
+                            className="w-full p-3 h-28 rounded-2xl bg-white dark:bg-gray-800 border-none text-xs text-gray-950 dark:text-white font-medium shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-fire-2/40 resize-none placeholder:text-gray-400"
                           />
                           <button 
                             type="submit"
                             disabled={submitting || !content.trim()}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:hover:bg-blue-600 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-500/10 cursor-pointer"
+                            className="w-full py-2.5 bg-fire-1 hover:bg-fire-1/85 disabled:opacity-40 disabled:hover:bg-fire-1/85 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md shadow-fire-2/10 cursor-pointer"
                           >
                             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={14} />}
                             Nạp trực tiếp vào kho
@@ -505,11 +505,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                           <div className={cn(
                             "py-6 px-4 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 text-center transition-all",
                             isImportingBank 
-                              ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-400/50" 
-                              : "bg-white dark:bg-gray-800/30 border-gray-200 dark:border-gray-800 group-hover:border-blue-400 dark:group-hover:border-blue-800 cursor-pointer"
+                              ? "bg-orange-50/50 dark:bg-navy-panel/20 border-fire-2/50" 
+                              : "bg-white dark:bg-gray-800/30 border-gray-200 dark:border-gray-800 group-hover:border-fire-2 dark:group-hover:border-fire-1 cursor-pointer"
                           )}>
-                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 group-hover:text-blue-500 group-hover:scale-105 transition-all">
-                              {isImportingBank ? <Loader2 className="w-6 h-6 animate-spin text-blue-600" /> : <FileText className="w-6 h-6" />}
+                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 group-hover:text-fire-2 group-hover:scale-105 transition-all">
+                              {isImportingBank ? <Loader2 className="w-6 h-6 animate-spin text-fire-1" /> : <FileText className="w-6 h-6" />}
                             </div>
                             <div>
                               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -524,8 +524,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                       )}
                     </div>
 
-                    <div className="p-3.5 bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100/30 dark:border-blue-800/10 rounded-2xl flex items-start gap-2.5">
-                      <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                    <div className="p-3.5 bg-orange-50/50 dark:bg-navy-panel/10 border border-orange-100/30 dark:border-fire-1/10 rounded-2xl flex items-start gap-2.5">
+                      <Info className="w-4 h-4 text-fire-2 shrink-0 mt-0.5" />
                       <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed font-semibold">
                         {importMode === 'question-bank'
                           ? '💡 File Excel chứa các câu hỏi trắc nghiệm chuẩn của giáo viên sẽ được nạp vào ngân hàng đề cố định. Mã câu hỏi (Cột C) làm ID duy nhất, import lại sẽ tự động cập nhật đè không sợ trùng.'
@@ -546,7 +546,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Tìm kiếm tài liệu nạp..."
-                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-xs text-gray-900 dark:text-white border-none shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-blue-500/40 font-semibold"
+                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-xs text-gray-900 dark:text-white border-none shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 outline-none focus:ring-2 focus:ring-fire-2/40 font-semibold"
                       />
                       {searchQuery && (
                         <button 
@@ -562,7 +562,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                     <div className="space-y-2.5">
                       {loading ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-2">
-                          <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
+                          <Loader2 className="w-6 h-6 animate-spin text-fire-1 dark:text-fire-2" />
                           <span className="text-xs text-gray-400 font-semibold tracking-wide uppercase">Đang đồng bộ...</span>
                         </div>
                       ) : filteredItems.length === 0 ? (
@@ -573,10 +573,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                         </div>
                       ) : (
                         filteredItems.map(item => (
-                          <div key={item.id} className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800/80 group hover:border-blue-200 dark:hover:border-blue-900/40 transition-all flex flex-col gap-2 relative">
+                          <div key={item.id} className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800/80 group hover:border-orange-200 dark:hover:border-navy-panel/40 transition-all flex flex-col gap-2 relative">
                             <div className="flex justify-between items-start gap-3">
                               <div className="flex flex-wrap gap-1.5 leading-none">
-                                <span className="px-2 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[8px] font-black rounded-lg uppercase tracking-wider">
+                                <span className="px-2 py-1 bg-orange-50 dark:bg-navy-panel/40 text-fire-1 dark:text-fire-2 text-[8px] font-black rounded-lg uppercase tracking-wider">
                                   {SUBJECTS.find(s => s.id === item.subjectId)?.name || item.subjectId}
                                 </span>
                                 {item.chapter && (
@@ -619,7 +619,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
           {confirmDialog && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-6 z-40 animate-in fade-in duration-250">
               <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 max-w-[360px] w-full shadow-2xl space-y-4 border border-gray-100 dark:border-gray-800 scale-in duration-200">
-                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <div className="w-12 h-12 bg-orange-50 dark:bg-navy-panel/20 rounded-2xl flex items-center justify-center text-fire-1 dark:text-fire-2">
                   <Database size={24} />
                 </div>
                 <div className="space-y-1">
@@ -637,7 +637,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                   <button 
                     type="button"
                     onClick={confirmDialog.onConfirm}
-                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs cursor-pointer transition-colors"
+                    className="flex-1 py-2.5 bg-fire-1 hover:bg-fire-1/85 text-white rounded-xl font-bold text-xs cursor-pointer transition-colors"
                   >
                     Xác Nhận
                   </button>
@@ -651,11 +651,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
             <div className="absolute inset-0 bg-white/95 dark:bg-gray-950/95 flex flex-col justify-center p-8 z-30 animate-in fade-in duration-300">
               <div className="space-y-6 max-w-sm mx-auto w-full">
                 <div className="space-y-2 text-center">
-                  <div className="inline-flex p-3 bg-blue-500/10 rounded-2xl text-blue-600 animate-bounce mb-1">
+                  <div className="inline-flex p-3 bg-fire-2/10 rounded-2xl text-fire-1 animate-bounce mb-1">
                     <Database size={28} />
                   </div>
                   <h3 className="font-extrabold text-lg text-gray-900 dark:text-white tracking-tight">RAG WORKFLOW ENGINES</h3>
-                  <p className="text-[10px] text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] font-black">Hồ sơ tiến trình số hóa dữ liệu</p>
+                  <p className="text-[10px] text-fire-1 dark:text-fire-2 uppercase tracking-[0.2em] font-black">Hồ sơ tiến trình số hóa dữ liệu</p>
                 </div>
 
                 {/* Progress Steps List */}
@@ -675,14 +675,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                         )}
                         <div className={cn(
                           "w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold transition-all relative z-10",
-                          isDone ? "bg-green-500 text-white" : isActive ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-gray-100 dark:bg-gray-850 text-gray-400"
+                          isDone ? "bg-green-500 text-white" : isActive ? "bg-fire-1 text-white shadow-md shadow-fire-2/20" : "bg-gray-100 dark:bg-gray-850 text-gray-400"
                         )}>
                           {isDone ? <Check size={10} className="stroke-[3px]" /> : idx + 1}
                         </div>
                         <div className="space-y-0.5">
                           <h4 className={cn(
                             "text-xs font-bold transition-colors leading-none",
-                            isDone ? "text-green-500" : isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400"
+                            isDone ? "text-green-500" : isActive ? "text-fire-1 dark:text-fire-2" : "text-gray-400"
                           )}>
                             {step.label}
                           </h4>
@@ -701,7 +701,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                 <div className="pt-2 flex items-center justify-center gap-2">
                   {uploadSteps.currentStep < 4 ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-fire-2" />
                       <span className="text-[10px] font-bold text-gray-500 animate-pulse tracking-wide uppercase">Cấu trúc nhúng đang chạy...</span>
                     </>
                   ) : (
@@ -721,7 +721,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                 "p-3.5 px-4 rounded-2xl shadow-xl border flex items-center gap-3",
                 toast.type === 'success' && "bg-emerald-50 dark:bg-emerald-950/90 border-emerald-100 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300",
                 toast.type === 'error' && "bg-rose-50 dark:bg-rose-950/90 border-rose-100 dark:border-rose-900/50 text-rose-800 dark:text-rose-300",
-                toast.type === 'info' && "bg-blue-50 dark:bg-blue-950/90 border-blue-100 dark:border-blue-900/50 text-blue-800 dark:text-blue-300"
+                toast.type === 'info' && "bg-orange-50 dark:bg-navy-panel/90 border-orange-100 dark:border-navy-panel/50 text-fire-1 dark:text-fire-2"
               )}>
                 {toast.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0" />}
                 {toast.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0 animate-bounce" />}
