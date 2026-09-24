@@ -16,6 +16,15 @@
   --color-fire-2: #FFB347;
 }
 
+body {
+  background: linear-gradient(180deg, #A3E0FF 0%, #5FB1ED 100%);
+  min-height: 100vh;
+}
+
+html.dark body {
+  background: var(--color-navy);
+}
+
 /* Nền lưới kỹ thuật — CSS thuần, không phải ảnh, chi phí hiệu năng gần như bằng 0 */
 .technical-grid-bg {
   background-image:

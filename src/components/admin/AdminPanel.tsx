@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, Plus, Trash2, X, Loader2, FileText, CheckCircle, AlertCircle, Search, Check, Info, ArrowRight } from 'lucide-react';
 import { db, collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc, isFirebaseConfigured } from '../../lib/firebase';
-import { cn } from '../../lib/utils';
+import { cn, cleanMathText } from '../../lib/utils';
 
 const SUBJECTS = [
   { id: 'dung-sai', name: 'Dung sai & Đo lường' },
@@ -150,16 +150,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
         body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Lỗi xử lý file từ phía máy chủ');
-      }
-      
-      let result;
+      const rawText = await response.text();
+      let result: any;
       try {
-        result = await response.json();
+        result = JSON.parse(rawText);
       } catch (jsonErr) {
-        throw new Error('Máy chủ phản hồi dữ liệu không đúng định dạng JSON.');
+        if (!response.ok) {
+          throw new Error('Máy chủ đang khởi động lại hoặc đang bận. Vui lòng đợi vài giây và bấm nạp lại nhé!');
+        }
+        throw new Error('Phản hồi máy chủ không hợp lệ. Vui lòng thử lại.');
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Lỗi xử lý file từ phía máy chủ');
       }
       
       // Stage 3 & 4: Received embedding response, writing to Firebase
@@ -187,17 +190,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !isFirebaseConfigured || !db) return;
+    if (!file) return;
+    
+    // Nếu người dùng chọn nhầm file Excel (.xlsx) ở khung tải tài liệu thông thường, tự động chuyển sang chế độ nạp Ngân hàng đề
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      setImportMode('question-bank');
+      executeQuestionBankUpload(file);
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    if (!isFirebaseConfigured || !db) return;
     
     // Trigger file checking / confirmation
     triggerFileUpload(file);
     if (e.target) e.target.value = '';
   };
 
-  const handleQuestionBankUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const executeQuestionBankUpload = async (file: File) => {
     setIsImportingBank(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -209,25 +219,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
         body: formData,
       });
 
+      const rawText = await response.text();
       let result: any = {};
       try {
-        result = await response.json();
+        result = JSON.parse(rawText);
       } catch (jsonErr) {
-        throw new Error('Máy chủ phản hồi dữ liệu không đúng định dạng JSON.');
+        if (!response.ok) {
+          throw new Error('Máy chủ đang khởi động lại hoặc đang bận. Vui lòng đợi 3-5 giây và bấm nạp lại nhé!');
+        }
+        throw new Error('Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại.');
       }
 
       if (!response.ok) {
         throw new Error(result.error || 'Lỗi khi import ngân hàng đề từ máy chủ.');
       }
 
-      showToast(`✅ Đã import ${result.imported} câu (bỏ qua ${result.skipped || 0} dòng lỗi)`, 'success');
+      const summaryText = result.summary ? ` (${result.summary})` : '';
+      showToast(`✅ Đã import thành công ${result.imported} câu hỏi!${summaryText}`, 'success');
     } catch (err: any) {
       console.error(err);
       showToast(err.message || 'Lỗi khi import ngân hàng đề.', 'error');
     } finally {
       setIsImportingBank(false);
-      if (e.target) e.target.value = '';
     }
+  };
+
+  const handleQuestionBankUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await executeQuestionBankUpload(file);
+    if (e.target) e.target.value = '';
   };
 
   const handleManualAdd = async (e: React.FormEvent) => {
@@ -420,29 +441,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
 
                     {/* Toggle Sub-input: File Upload vs Manual vs Ngân hàng đề */}
                     <div className="pt-2 border-t border-gray-100 dark:border-gray-800/50">
-                      <div className="flex justify-between items-center mb-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Phương thức nạp</span>
-                        <div className="flex gap-1 bg-gray-100/70 dark:bg-gray-800/50 p-0.5 rounded-lg text-[9px] font-bold">
+                        <div className="flex flex-wrap gap-1 bg-gray-100/70 dark:bg-gray-800/50 p-1 rounded-xl text-[10px] font-bold">
                           <button
                             type="button"
                             onClick={() => setImportMode('file')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'file' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
+                              importMode === 'file' 
+                                ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs font-black" 
+                                : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
+                            )}
                           >
-                            Tải file PDF/TXT
+                            <FileText size={12} />
+                            Tài liệu PDF/DOCX
                           </button>
                           <button
                             type="button"
                             onClick={() => setImportMode('manual')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'manual' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
+                              importMode === 'manual' 
+                                ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs font-black" 
+                                : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
+                            )}
                           >
+                            <Plus size={12} />
                             Dán văn bản
                           </button>
                           <button
                             type="button"
                             onClick={() => setImportMode('question-bank')}
-                            className={cn("px-2 py-1 rounded-md transition-all cursor-pointer", importMode === 'question-bank' ? "bg-white dark:bg-gray-700 text-fire-1 dark:text-white shadow-xs" : "text-gray-500")}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
+                              importMode === 'question-bank' 
+                                ? "bg-emerald-600 text-white shadow-xs font-black" 
+                                : "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                            )}
                           >
-                            Ngân hàng đề
+                            <Database size={12} />
+                            Ngân hàng đề (.xlsx)
                           </button>
                         </div>
                       </div>
@@ -594,7 +633,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, setIsOpen }) => 
                               </button>
                             </div>
                             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-medium line-clamp-4">
-                              {item.content}
+                              {cleanMathText(item.content)}
                             </p>
                             {item.embedding && (
                               <div className="flex items-center gap-1 mt-1 text-[8px] text-green-600 dark:text-green-400 font-bold uppercase tracking-widest">

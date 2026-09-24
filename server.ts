@@ -529,14 +529,11 @@ ${context}
       }
 
       const file = req.file;
-      const { subjectId } = req.body;
+      const rawSubjectId = req.body?.subjectId;
+      const subjectId = (rawSubjectId && String(rawSubjectId).trim()) ? String(rawSubjectId).trim() : 'co-ky-thuat';
 
       if (!file) {
         return res.status(400).json({ error: "Vui lòng chọn file Excel (.xlsx) để tải lên." });
-      }
-
-      if (!subjectId || !String(subjectId).trim()) {
-        return res.status(400).json({ error: "Vui lòng chọn môn học tương ứng với ngân hàng đề." });
       }
 
       // Đọc file Excel từ buffer
@@ -569,14 +566,33 @@ ${context}
 
       let skipped = 0;
       const chapters: Record<string, number> = {};
+      const subjectCounts: Record<string, number> = {};
 
-      // Bắt đầu từ dòng 10 trong Excel (index 9 trong mảng 0-indexed)
-      for (let r = 9; r < rows.length; r++) {
+      const SUBJECT_MAP: Record<string, string> = {
+        'MH 12': 'an-toan',
+        'MH12': 'an-toan',
+        'MH 08': 'co-ky-thuat',
+        'MH8': 'co-ky-thuat',
+        'MH08': 'co-ky-thuat',
+        'MH 09': 'dung-sai',
+        'MH9': 'dung-sai',
+        'MH09': 'dung-sai',
+        'MH 06': 've-ky-thuat',
+        'MH6': 've-ky-thuat',
+        'MH06': 've-ky-thuat',
+        'MH 07': 'vat-lieu',
+        'MH7': 'vat-lieu',
+        'MH07': 'vat-lieu',
+      };
+
+      // Quét toàn bộ các dòng (bỏ qua các dòng tiêu đề như dòng 1-9)
+      for (let r = 0; r < rows.length; r++) {
         const row = rows[r];
         if (!row || !Array.isArray(row)) {
           continue;
         }
 
+        const rawMod = row[1];
         const qid = row[2];
         const content = row[3];
         const a = row[4];
@@ -586,28 +602,31 @@ ${context}
         const correctLetter = row[8];
         const bloom = row[9];
 
-        // Nếu cả mã câu và nội dung đều trống -> dòng trống cuối bảng, bỏ qua không tính lỗi
+        // Bỏ qua dòng trống hoàn toàn hoặc dòng tiêu đề bảng
         if ((qid === null || qid === undefined || String(qid).trim() === '') &&
             (content === null || content === undefined || String(content).trim() === '')) {
           continue;
         }
 
-        // Kiểm tra thiếu trường bắt buộc
-        if (
-          qid === null || qid === undefined || String(qid).trim() === '' ||
-          content === null || content === undefined || String(content).trim() === '' ||
-          a === null || a === undefined || String(a).trim() === '' ||
-          b === null || b === undefined || String(b).trim() === '' ||
-          c === null || c === undefined || String(c).trim() === '' ||
-          d === null || d === undefined || String(d).trim() === '' ||
-          correctLetter === null || correctLetter === undefined || String(correctLetter).trim() === ''
-        ) {
-          skipped++;
+        const letterStr = correctLetter !== null && correctLetter !== undefined ? String(correctLetter).trim().toUpperCase() : '';
+        // Bỏ qua nếu không phải phương án A, B, C, D (ví dụ các dòng tiêu đề chú thích '(1)', '(2)', '(6)')
+        if (!['A', 'B', 'C', 'D'].includes(letterStr)) {
+          // Chỉ tăng skipped nếu có nội dung giống câu hỏi
+          if (content && String(content).length > 10 && qid) {
+            skipped++;
+          }
           continue;
         }
 
-        const letter = String(correctLetter).trim().toUpperCase();
-        if (!['A', 'B', 'C', 'D'].includes(letter)) {
+        // Kiểm tra thiếu trường nội dung câu hỏi hoặc phương án bắt buộc
+        if (
+          !qid || String(qid).trim() === '' ||
+          !content || String(content).trim() === '' ||
+          a === null || a === undefined || String(a).trim() === '' ||
+          b === null || b === undefined || String(b).trim() === '' ||
+          c === null || c === undefined || String(c).trim() === '' ||
+          d === null || d === undefined || String(d).trim() === ''
+        ) {
           skipped++;
           continue;
         }
@@ -619,7 +638,7 @@ ${context}
           String(d).trim()
         ];
 
-        const letterIndex = letter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        const letterIndex = letterStr.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
         const correctAnswer = options[letterIndex];
         if (!correctAnswer) {
           skipped++;
@@ -628,14 +647,32 @@ ${context}
 
         const qidStr = String(qid).trim();
         const m = qidStr.match(/CH(\d+)/i);
-        const chapter = m ? m[1] : "00";
+        const chapter = m ? m[1] : "01";
+
+        // Tự động suy luận môn học từ Cột B hoặc tiền tố Cột C (hỗ trợ file gộp nhiều môn)
+        const modStr = rawMod ? String(rawMod).trim().toUpperCase() : '';
+        let detectedSubjectId = String(subjectId).trim();
+
+        if (SUBJECT_MAP[modStr]) {
+          detectedSubjectId = SUBJECT_MAP[modStr];
+        } else if (qidStr.startsWith('ATLD_') || qidStr.startsWith('AT_')) {
+          detectedSubjectId = 'an-toan';
+        } else if (qidStr.startsWith('CKT_') || qidStr.startsWith('CK_')) {
+          detectedSubjectId = 'co-ky-thuat';
+        } else if (qidStr.startsWith('DS_')) {
+          detectedSubjectId = 'dung-sai';
+        } else if (qidStr.startsWith('VKT_')) {
+          detectedSubjectId = 've-ky-thuat';
+        } else if (qidStr.startsWith('VL_')) {
+          detectedSubjectId = 'vat-lieu';
+        }
 
         const rawBloom = bloom ? String(bloom).trim().toUpperCase() : 'TH';
         const bloomLevel: 'NB' | 'TH' | 'VD' = (rawBloom === 'NB' || rawBloom === 'TH' || rawBloom === 'VD') ? rawBloom : 'TH';
         const difficulty = BLOOM_MAP[bloomLevel] || 'medium';
 
         questions.push({
-          subjectId: String(subjectId).trim(),
+          subjectId: detectedSubjectId,
           chapter,
           questionId: qidStr,
           question: String(content).trim(),
@@ -647,6 +684,7 @@ ${context}
         });
 
         chapters[chapter] = (chapters[chapter] || 0) + 1;
+        subjectCounts[detectedSubjectId] = (subjectCounts[detectedSubjectId] || 0) + 1;
       }
 
       if (questions.length === 0) {
@@ -655,7 +693,7 @@ ${context}
           imported: 0,
           skipped,
           chapters: {},
-          message: "Không tìm thấy câu hỏi hợp lệ nào trong file (từ dòng 10 trở đi)."
+          message: "Không tìm thấy câu hỏi hợp lệ nào trong file Excel."
         });
       }
 
@@ -678,12 +716,26 @@ ${context}
         await batch.commit();
       }
 
-      console.log(`[QuestionBank] Đã import thành công ${questions.length} câu vào Firestore (bỏ qua ${skipped} dòng).`);
+      const subjectNameMap: Record<string, string> = {
+        'co-ky-thuat': 'Cơ kỹ thuật',
+        'dung-sai': 'Dung sai & Đo lường',
+        'an-toan': 'An toàn lao động',
+        've-ky-thuat': 'Vẽ kỹ thuật',
+        'vat-lieu': 'Vật liệu cơ khí',
+      };
+
+      const summaryParts = Object.entries(subjectCounts)
+        .map(([sid, cnt]) => `${subjectNameMap[sid] || sid}: ${cnt} câu`)
+        .join(', ');
+
+      console.log(`[QuestionBank] Đã import thành công ${questions.length} câu vào Firestore (${summaryParts}). Bỏ qua ${skipped} dòng.`);
       return res.json({
         success: true,
         imported: questions.length,
         skipped,
-        chapters
+        chapters,
+        subjectCounts,
+        summary: summaryParts
       });
     } catch (err: any) {
       console.error("[QuestionBank] Import error:", err);

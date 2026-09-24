@@ -13,12 +13,15 @@ interface ThemeBackgroundProps {
 export const ThemeBackground: React.FC<ThemeBackgroundProps> = ({ isDarkMode }) => {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 transition-colors duration-700">
-      {/* Nền sáng: giữ đơn giản, trung tính */}
+      {/* Nền sáng: linear-gradient(180deg, #A3E0FF 0%, #5FB1ED 100%) */}
       <div
         className={cn(
-          "absolute inset-0 transition-opacity duration-700 bg-gradient-to-b from-gray-50 to-white",
+          "absolute inset-0 transition-opacity duration-700",
           isDarkMode ? "opacity-0" : "opacity-100"
         )}
+        style={{
+          background: "linear-gradient(180deg, #A3E0FF 0%, #5FB1ED 100%)"
+        }}
       />
 
       {/* Nền tối: navy + lưới kỹ thuật + glow lửa góc trên */}
