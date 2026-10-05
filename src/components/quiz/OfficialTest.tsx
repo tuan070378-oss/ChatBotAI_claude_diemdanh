@@ -71,7 +71,7 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
       setIsLoadingQuestions(true);
       setLoadError(null);
       try {
-        const response = await fetch(`/api/official-test-questions?subjectId=${encodeURIComponent(subjectId)}&count=${encodeURIComponent(count)}`);
+        const response = await fetch(`/api/official-test-questions?subjectId=${encodeURIComponent(subjectId)}&count=${encodeURIComponent(count)}&testId=${encodeURIComponent(testId)}`);
         const data = await response.json().catch(() => ({}));
         if (!isMounted) return;
 

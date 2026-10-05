@@ -64,9 +64,14 @@ export function cleanMathText(text: string | undefined | null): string {
     .replace(/\+\/-/g, '±')
     .replace(/->/g, '→');
 
-  // 6. Plain-text Greek letters commonly used in engineering formulas (tau, sigma, etc.)
-  // Context match: not part of a longer word
-  const lookahead = '(?=[_=\\s\\[\\]\\(\\)\\+\\-\\*\\/\\^<>,;:]|$)';
+  // 6. Plain-text Greek letters commonly used in engineering formulas (tau, sigma, pi, epsilon, phi, etc.)
+  // Diameter phi: phi30, phi 50, Phi 20 -> Ø30, Ø50, Ø20
+  cleaned = cleaned.replace(/(?<=[^a-zA-Z]|^)phi\s*(\d+)/gi, 'Ø$1');
+  cleaned = cleaned.replace(/(?<=[đĐ]ường kính\s+)phi\b/gi, 'Ø');
+
+  // Negative lookahead to avoid replacing Vietnamese words that start with "phi" (phi kim, phi lý, phi cơ, etc.)
+  const vnPhiWords = '(?!\\s*(?:kim|cơ|lý|pháp|thường|vụ|tuyến|tiêu|tang|hành|đội|thuyền|lao|nước|giao))';
+  const lookahead = '(?=[_=\\s\\[\\]\\(\\)\\+\\-\\*\\/\\^<>,;:\\.]|$)';
   const lookbehind = '(?<=[^a-zA-Z]|^)';
   
   cleaned = cleaned
@@ -79,7 +84,14 @@ export function cleanMathText(text: string | undefined | null): string {
     .replace(new RegExp(lookbehind + 'beta' + lookahead, 'gi'), 'β')
     .replace(new RegExp(lookbehind + 'theta' + lookahead, 'gi'), 'θ')
     .replace(new RegExp(lookbehind + 'delta' + lookahead, 'g'), 'δ')
-    .replace(new RegExp(lookbehind + 'Delta' + lookahead, 'g'), 'Δ');
+    .replace(new RegExp(lookbehind + 'Delta' + lookahead, 'g'), 'Δ')
+    .replace(new RegExp(lookbehind + 'pi' + lookahead, 'g'), 'π')
+    .replace(new RegExp(lookbehind + 'Pi' + lookahead, 'g'), 'Π')
+    .replace(new RegExp(lookbehind + 'epsilon' + lookahead, 'gi'), 'ε')
+    .replace(new RegExp(lookbehind + 'phi' + vnPhiWords + lookahead, 'gi'), 'φ')
+    .replace(new RegExp(lookbehind + 'mu' + lookahead, 'gi'), 'μ')
+    .replace(new RegExp(lookbehind + 'eta' + lookahead, 'gi'), 'η')
+    .replace(new RegExp(lookbehind + 'rho' + lookahead, 'gi'), 'ρ');
 
   // 7. Mechanical engineering notations:
   // Wo or W0 (Section modulus in torsion/bending) -> W₀

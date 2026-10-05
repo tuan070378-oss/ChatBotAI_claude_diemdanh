@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, getDoc, addDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, getDoc, addDoc, doc, writeBatch, serverTimestamp, setDoc, runTransaction } from 'firebase/firestore';
 import multer from 'multer';
 import * as XLSX from 'xlsx';
 // @ts-ignore
@@ -924,10 +924,12 @@ Yêu cầu phản hồi:
    * Network của DevTools dù React state có lọc hay không. Endpoint này đọc Firestore Ở SERVER
    * rồi mới strip correctAnswer, nên dữ liệu gửi về trình duyệt không bao giờ chứa đáp án đúng.
    *
-   * Đồng thời: xáo trộn thứ tự câu hỏi + thứ tự đáp án riêng cho MỖI lần gọi (mỗi sinh viên
-   * nhận 1 thứ tự khác nhau, giảm chép bài theo số thứ tự câu), và giới hạn đúng số câu GV
-   * đã chọn lúc kích hoạt (?count=40|60). Nếu ngân hàng ít câu hơn count, lặp lại cho đủ —
-   * áp dụng như nhau cho mọi sinh viên cùng môn nên vẫn công bằng.
+   * QUAN TRỌNG (vá lỗ hổng điểm số): bộ CÂU HỎI (danh sách questionId) cho mỗi testId được
+   * CHỐT CỐ ĐỊNH ngay lần đầu tiên có ai gọi endpoint này cho testId đó — lưu vào Firestore
+   * collection `exam_sessions/{testId}`. Các lượt gọi sau (sinh viên khác cùng lớp) đọc lại
+   * ĐÚNG bộ câu hỏi đã chốt, chỉ xáo trộn lại THỨ TỰ HIỂN THỊ + thứ tự đáp án cho riêng người
+   * đó (chống nhìn bài theo vị trí), không đổi TẬP HỢP câu hỏi. Endpoint chấm điểm sẽ đọc lại
+   * đúng bộ đã chốt này làm mẫu số cố định — client không thể gửi thiếu câu để nâng điểm.
    */
   app.get("/api/official-test-questions", async (req, res) => {
     try {
@@ -935,36 +937,16 @@ Yêu cầu phản hồi:
         return res.status(500).json({ error: "Firebase Firestore chưa được cấu hình trên máy chủ." });
       }
       const subjectId = String(req.query.subjectId || "").trim();
+      const testId = String(req.query.testId || "").trim();
       if (!subjectId) {
         return res.status(400).json({ error: "Thiếu subjectId." });
+      }
+      if (!testId) {
+        return res.status(400).json({ error: "Thiếu testId — không xác định được lượt kiểm tra." });
       }
       const requestedCount = parseInt(String(req.query.count || "40"), 10);
       const count = (requestedCount === 40 || requestedCount === 60) ? requestedCount : 40;
 
-      const snapshot = await getDocs(query(collection(db, 'question_bank'), where('subjectId', '==', subjectId)));
-      const bank = snapshot.docs.map((d) => {
-        const data = d.data() as any;
-        const options = Array.isArray(data.options) ? [...data.options] : [];
-        // Xáo trộn thứ tự đáp án của riêng câu này — không ảnh hưởng chấm điểm vì
-        // server luôn so sánh bằng NỘI DUNG đáp án (correctAnswer), không phải vị trí A/B/C/D.
-        for (let i = options.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [options[i], options[j]] = [options[j], options[i]];
-        }
-        return {
-          id: data.questionId || d.id,
-          question: data.question || '',
-          options,
-          difficulty: data.difficulty || 'medium',
-          // KHÔNG đưa correctAnswer, bloomLevel hay bất kỳ field nào khác vào response.
-        };
-      });
-
-      if (bank.length === 0) {
-        return res.json({ questions: [] });
-      }
-
-      // Xáo trộn thứ tự câu hỏi (Fisher–Yates)
       const shuffleArr = <T,>(arr: T[]): T[] => {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
@@ -974,26 +956,73 @@ Yêu cầu phản hồi:
         return a;
       };
 
-      let questions = shuffleArr(bank);
-      if (questions.length < count) {
-        // Ngân hàng chưa đủ số câu yêu cầu — lặp lại (xáo trộn lại mỗi vòng), gắn hậu tố
-        // vào id để không trùng key ở client, giữ nguyên nội dung/đáp án từng câu.
-        const filled: typeof bank = [];
-        let cycle = 0;
-        while (filled.length < count) {
-          const batch = shuffleArr(bank);
-          for (const q of batch) {
-            if (filled.length >= count) break;
-            filled.push(cycle === 0 ? q : { ...q, id: `${q.id}__x${cycle}` });
-          }
-          cycle++;
-        }
-        questions = filled;
-      } else {
-        questions = questions.slice(0, count);
+      // Toàn bộ ngân hàng đề của môn (chỉ id, dùng để chọn/lặp câu — KHÔNG chứa đáp án).
+      const snapshot = await getDocs(query(collection(db, 'question_bank'), where('subjectId', '==', subjectId)));
+      const bankIds = snapshot.docs.map((d) => (d.data() as any).questionId || d.id);
+
+      if (bankIds.length === 0) {
+        return res.json({ questions: [] });
       }
 
-      return res.json({ questions });
+      // Chốt (hoặc đọc lại) danh sách questionId cố định cho đúng testId này — atomic qua transaction
+      // để 2 sinh viên cùng bấm vào gần như đồng thời không tạo ra 2 bộ đề khác nhau cho cùng 1 lượt thi.
+      const sessionRef = doc(db, 'exam_sessions', testId);
+      const fixedIds: string[] = await runTransaction(db, async (tx) => {
+        const snap = await tx.get(sessionRef);
+        if (snap.exists()) {
+          return (snap.data() as any).questionIds as string[];
+        }
+
+        let chosen = shuffleArr(bankIds);
+        if (chosen.length < count) {
+          const filled: string[] = [];
+          let cycle = 0;
+          while (filled.length < count) {
+            const batch = shuffleArr(bankIds);
+            for (const id of batch) {
+              if (filled.length >= count) break;
+              filled.push(cycle === 0 ? id : `${id}__x${cycle}`);
+            }
+            cycle++;
+          }
+          chosen = filled;
+        } else {
+          chosen = chosen.slice(0, count);
+        }
+
+        tx.set(sessionRef, { testId, subjectId, questionIds: chosen, createdAt: serverTimestamp() });
+        return chosen;
+      });
+
+      // Lấy nội dung đầy đủ (đã lọc đáp án) cho đúng các questionId đã chốt — id lặp dạng
+      // "xxx__xN" trỏ về cùng 1 câu gốc "xxx" trong ngân hàng.
+      const bankById = new Map(snapshot.docs.map((d) => {
+        const data = d.data() as any;
+        return [data.questionId || d.id, data];
+      }));
+
+      const questions = fixedIds.map((fid) => {
+        const baseId = fid.split('__x')[0];
+        const data: any = bankById.get(baseId) || {};
+        const options = Array.isArray(data.options) ? [...data.options] : [];
+        // Xáo trộn thứ tự đáp án riêng cho lần hiển thị này — không ảnh hưởng chấm điểm vì
+        // server luôn so sánh bằng NỘI DUNG đáp án, không phải vị trí A/B/C/D.
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]];
+        }
+        return {
+          id: fid,
+          question: data.question || '',
+          options,
+          difficulty: data.difficulty || 'medium',
+          // KHÔNG đưa correctAnswer, bloomLevel hay bất kỳ field nào khác vào response.
+        };
+      });
+
+      // Xáo trộn thứ tự HIỂN THỊ cho riêng lần gọi này (mỗi sinh viên 1 thứ tự khác nhau),
+      // KHÔNG đổi tập hợp câu hỏi đã chốt ở trên.
+      return res.json({ questions: shuffleArr(questions) });
     } catch (e: any) {
       console.error("[OfficialTestQuestions] Lỗi:", e);
       return res.status(500).json({ error: e.message || "Lỗi tải đề kiểm tra." });
@@ -1065,59 +1094,61 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
       if (!subjectId || !String(subjectId).trim()) {
         return res.status(400).json({ error: "Thiếu mã môn học (subjectId)." });
       }
-      if (!Array.isArray(answers) || answers.length === 0) {
-        return res.status(400).json({ error: "Danh sách câu trả lời không hợp lệ hoặc rỗng." });
+      if (!Array.isArray(answers)) {
+        return res.status(400).json({ error: "Danh sách câu trả lời không hợp lệ." });
       }
 
-      // Tra cứu và chấm điểm từng câu hỏi trực tiếp từ Firestore question_bank
-      let correctCount = 0;
-      let evaluatedCount = 0;
+      // VÁ LỖ HỔNG ĐIỂM SỐ: đọc lại bộ câu hỏi đã CHỐT CỐ ĐỊNH cho đúng testId này
+      // (được ghi lúc tải đề, xem /api/official-test-questions) — đây là nguồn sự thật duy nhất,
+      // không tin vào answers.length hay danh sách questionId mà client tự gửi lên.
+      const sessionSnap = await getDoc(doc(db, 'exam_sessions', String(testId).trim()));
+      if (!sessionSnap.exists()) {
+        return res.status(400).json({
+          error: "Không tìm thấy phiên kiểm tra này trên hệ thống (testId không hợp lệ hoặc chưa từng tải đề). Vui lòng liên hệ giảng viên."
+        });
+      }
+      const pinnedIds: string[] = (sessionSnap.data() as any).questionIds || [];
+      if (pinnedIds.length === 0) {
+        return res.status(400).json({ error: "Phiên kiểm tra này không có câu hỏi hợp lệ." });
+      }
 
-      // Tra cứu tài liệu câu hỏi theo Document ID (chính là questionId)
-      const lookupPromises = answers.map(async (ans: { questionId: string; selectedAnswer: string }) => {
-        if (!ans || !ans.questionId) return null;
+      // Chỉ giữ lại câu trả lời của SV cho đúng các câu NẰM TRONG bộ đã chốt — bỏ qua mọi
+      // questionId lạ mà client có thể tự chèn thêm (không cho phép "tự chọn câu để chấm").
+      const answerMap = new Map<string, string>();
+      for (const ans of answers) {
+        if (ans && ans.questionId) {
+          answerMap.set(String(ans.questionId).trim(), String(ans.selectedAnswer || '').trim());
+        }
+      }
+
+      // Tra cứu đáp án đúng cho TỪNG CÂU TRONG BỘ ĐÃ CHỐT (không phải từng câu client gửi) —
+      // id dạng "xxx__xN" (câu lặp do ngân hàng thiếu) trỏ về cùng 1 câu gốc "xxx".
+      const lookupPromises = pinnedIds.map(async (pid) => {
+        const baseId = pid.split('__x')[0];
         try {
-          const qId = String(ans.questionId).trim();
-          const docRef = doc(db, 'question_bank', qId);
-          const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) {
-            console.warn(`[OfficialTest] Không tìm thấy questionId=${qId} trong question_bank, bỏ qua.`);
-            return null;
-          }
-          const qData = docSnap.data();
-          const expectedAnswer = String(qData.correctAnswer || '').trim();
-          const studentAnswer = String(ans.selectedAnswer || '').trim();
-
-          const isCorrect = studentAnswer !== '' && studentAnswer === expectedAnswer;
-          return { isCorrect, found: true };
+          const docSnap = await getDoc(doc(db, 'question_bank', baseId));
+          if (!docSnap.exists()) return false; // câu bị xoá khỏi ngân hàng sau khi đã chốt đề — tính là sai, không loại khỏi mẫu số
+          const expectedAnswer = String((docSnap.data() as any).correctAnswer || '').trim();
+          const studentAnswer = answerMap.get(pid) || ''; // không trả lời -> chuỗi rỗng -> luôn sai
+          return studentAnswer !== '' && studentAnswer === expectedAnswer;
         } catch (err) {
-          console.error(`[OfficialTest] Lỗi khi tra cứu questionId=${ans.questionId}:`, err);
-          return null;
+          console.error(`[OfficialTest] Lỗi tra cứu questionId=${pid}:`, err);
+          return false;
         }
       });
 
       const results = await Promise.all(lookupPromises);
+      const correctCount = results.filter(Boolean).length;
 
-      for (const resItem of results) {
-        if (resItem && resItem.found) {
-          evaluatedCount++;
-          if (resItem.isCorrect) {
-            correctCount++;
-          }
-        }
-      }
+      // Mẫu số LUÔN LÀ số câu đã chốt cho lượt thi này (40 hoặc 60) — cố định, không thể bị
+      // thao túng bằng cách gửi thiếu câu hay tự chèn câu ngoài đề.
+      const totalCount = pinnedIds.length;
 
-      if (evaluatedCount === 0) {
-        return res.status(400).json({ 
-          error: "Không thể xác thực câu hỏi nào trong đề thi với cơ sở dữ liệu. Vui lòng liên hệ giảng viên." 
-        });
-      }
-
-      // Tính điểm thang 10: (số câu đúng / tổng số câu đã trả lời/đánh giá) * 10, làm tròn 1 chữ số thập phân
-      const rawScore = (correctCount / evaluatedCount) * 10;
+      // Tính điểm thang 10, làm tròn 1 chữ số thập phân
+      const rawScore = (correctCount / totalCount) * 10;
       const finalScore = Math.round(rawScore * 10) / 10;
 
-      console.log(`[OfficialTest] MSSV=${mssv}, Lớp=${className}, testId=${testId}: Đúng ${correctCount}/${evaluatedCount} câu -> Điểm: ${finalScore}`);
+      console.log(`[OfficialTest] MSSV=${mssv}, Lớp=${className}, testId=${testId}: Đúng ${correctCount}/${totalCount} câu -> Điểm: ${finalScore}`);
 
       // Kiểm tra cấu hình kết nối Điểm danh Auto
       const webappUrl = process.env.DIEMDANH_WEBAPP_URL;
@@ -1162,7 +1193,7 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         success: true,
         score: finalScore,
         correctCount,
-        totalQuestions: evaluatedCount,
+        totalQuestions: totalCount,
         message: scriptData.message || `Đã nộp bài và ghi nhận điểm thành công vào Điểm danh Auto: ${finalScore}/10 điểm!`
       });
     } catch (e: any) {
