@@ -76,6 +76,16 @@ export const OfficialTest: React.FC<OfficialTestProps> = ({
         if (!isMounted) return;
 
         if (!response.ok) {
+          // Bản trang cũ bị cache → máy chủ báo thiếu testId: tự tải lại đúng 1 lần để lấy bản mới.
+          if (data.code === 'MISSING_TEST_ID') {
+            try {
+              if (!sessionStorage.getItem('ot_reloaded')) {
+                sessionStorage.setItem('ot_reloaded', '1');
+                window.location.reload();
+                return;
+              }
+            } catch (_) { /* sessionStorage có thể bị chặn */ }
+          }
           throw new Error(data.error || `Không thể tải đề thi (mã lỗi ${response.status}).`);
         }
 

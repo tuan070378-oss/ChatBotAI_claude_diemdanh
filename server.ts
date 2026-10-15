@@ -942,7 +942,11 @@ Yêu cầu phản hồi:
         return res.status(400).json({ error: "Thiếu subjectId." });
       }
       if (!testId) {
-        return res.status(400).json({ error: "Thiếu testId — không xác định được lượt kiểm tra." });
+        // Thường do trình duyệt đang giữ bản trang cũ (chưa gửi testId). Trả mã riêng để client tự tải lại.
+        return res.status(400).json({
+          code: "MISSING_TEST_ID",
+          error: "Trang làm bài trên máy em đang là bản cũ (thiếu mã lượt kiểm tra). Hãy tải lại trang rồi bấm lại nút \"Làm bài kiểm tra\" từ trang Điểm danh."
+        });
       }
       const requestedCount = parseInt(String(req.query.count || "40"), 10);
       const count = (requestedCount === 40 || requestedCount === 60) ? requestedCount : 40;
@@ -1221,8 +1225,19 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    // index.html KHÔNG được cache (để điện thoại luôn nhận đúng tên file JS mới sau mỗi lần deploy);
+    // file /assets/* có hash trong tên nên cache lâu an toàn.
+    app.use(express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-store, must-revalidate');
+        } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      }
+    }));
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
