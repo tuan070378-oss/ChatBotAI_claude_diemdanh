@@ -1084,7 +1084,10 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         return res.status(500).json({ error: "Firebase Firestore chưa được kết nối trên máy chủ." });
       }
 
-      const { testId, mssv, className, subjectId, answers } = req.body;
+      const { testId, mssv, className, subjectId, answers, violationCount, isAutoSubmitted } = req.body;
+
+      const vCount = Math.max(0, parseInt(String(violationCount || 0), 10));
+      const autoSub = Boolean(isAutoSubmitted);
 
       if (!testId || !String(testId).trim()) {
         return res.status(400).json({ error: "Thiếu mã bài kiểm tra (testId)." });
@@ -1152,7 +1155,26 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
       const rawScore = (correctCount / totalCount) * 10;
       const finalScore = Math.round(rawScore * 10) / 10;
 
-      console.log(`[OfficialTest] MSSV=${mssv}, Lớp=${className}, testId=${testId}: Đúng ${correctCount}/${totalCount} câu -> Điểm: ${finalScore}`);
+      console.log(`[OfficialTest] MSSV=${mssv}, Lớp=${className}, testId=${testId}: Đúng ${correctCount}/${totalCount} câu -> Điểm: ${finalScore} | Vi phạm: ${vCount} lần | Tự động thu bài: ${autoSub}`);
+
+      // Ghi nhận vết làm bài và giám sát chống gian lận vào Firestore
+      try {
+        const subId = `${String(testId).trim()}__${String(mssv).trim()}`;
+        await setDoc(doc(db, 'exam_submissions', subId), {
+          testId: String(testId).trim(),
+          mssv: String(mssv).trim(),
+          className: String(className).trim(),
+          subjectId: String(subjectId).trim(),
+          score: finalScore,
+          correctCount,
+          totalQuestions: totalCount,
+          violationCount: vCount,
+          isAutoSubmitted: autoSub,
+          submittedAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (logErr) {
+        console.warn("[OfficialTest] Không thể ghi audit log vào Firestore:", logErr);
+      }
 
       // Kiểm tra cấu hình kết nối Điểm danh Auto
       const webappUrl = process.env.DIEMDANH_WEBAPP_URL;
@@ -1164,7 +1186,7 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         });
       }
 
-      // Gọi sang Apps Script Web App để ghi điểm
+      // Gọi sang Apps Script Web App để ghi điểm kèm thông tin vi phạm
       const targetUrl = webappUrl.includes('?') 
         ? `${webappUrl}&action=submitAssessment` 
         : `${webappUrl}?action=submitAssessment`;
@@ -1175,6 +1197,8 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         className: String(className).trim(),
         testId: String(testId).trim(),
         score: String(finalScore),
+        violationCount: String(vCount),
+        isAutoSubmitted: String(autoSub),
       });
 
       const { data: scriptData, networkError } = await postToAppsScriptWithRetry(targetUrl, postBody);
@@ -1198,6 +1222,8 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         score: finalScore,
         correctCount,
         totalQuestions: totalCount,
+        violationCount: vCount,
+        isAutoSubmitted: autoSub,
         message: scriptData.message || `Đã nộp bài và ghi nhận điểm thành công vào Điểm danh Auto: ${finalScore}/10 điểm!`
       });
     } catch (e: any) {

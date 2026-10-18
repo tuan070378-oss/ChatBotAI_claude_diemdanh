@@ -48,5 +48,13 @@ service cloud.firestore {
       allow update: if isValidQuestionBankItem(incoming());
       allow delete: if true;
     }
+
+    match /exam_sessions/{testId} {
+      allow read, write: if true;
+    }
+
+    match /exam_submissions/{submissionId} {
+      allow read, write: if true;
+    }
   }
 }
