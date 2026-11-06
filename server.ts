@@ -1191,6 +1191,9 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         ? `${webappUrl}&action=submitAssessment` 
         : `${webappUrl}?action=submitAssessment`;
 
+      // attemptId cố định cho lần nộp này: Apps Script dùng để không ghi trùng khi Remix gửi lại (retry).
+      const attemptId = `${String(testId).trim()}_${String(mssv).trim()}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
       const postBody = new URLSearchParams({
         secret: syncSecret || '',
         mssv: String(mssv).trim(),
@@ -1199,6 +1202,7 @@ async function postToAppsScriptWithRetry(targetUrl: string, postBody: URLSearchP
         score: String(finalScore),
         violationCount: String(vCount),
         isAutoSubmitted: String(autoSub),
+        attemptId,
       });
 
       const { data: scriptData, networkError } = await postToAppsScriptWithRetry(targetUrl, postBody);
